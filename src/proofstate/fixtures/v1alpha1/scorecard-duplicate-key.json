@@ -1,0 +1,6 @@
+{
+  "schema_version": "proofstate.dev/scorecard/v1alpha1",
+  "schema_version": "proofstate.dev/scorecard/v1alpha1",
+  "repository": {"identity": "example.invalid/widget", "commit": "0000000000000000000000000000000000000000"},
+  "assertions": []
+}

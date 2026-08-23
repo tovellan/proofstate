@@ -18,9 +18,15 @@ Exit status:
 - `1`: evaluation completed but requested gate was not achieved.
 - `2`: invalid input, invalid scorecard, or repository-level evaluation error.
 
-## `proofstate schema`
+## `proofstate schema [scorecard|attestation]`
 
-Prints the scorecard JSON Schema to standard output.
+Prints a versioned document JSON Schema to standard output. The default remains
+`scorecard` for compatibility.
+
+## `proofstate conformance`
+
+Verifies the installed, digest-pinned `v1alpha1` conformance fixtures. Use
+`--format json` for a versioned result with each expected and observed case.
 
 ## `proofstate --version`
 

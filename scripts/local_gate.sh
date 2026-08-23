@@ -24,7 +24,7 @@ uv run ruff format --check .
 uv run ruff check .
 uv run mypy src/proofstate tests
 uv run pytest --cov=proofstate --cov-report=term-missing
-uv build
+uv build --out-dir "$gate_tmp/dist"
 
 uv export --quiet \
   --frozen \
@@ -37,11 +37,12 @@ uv run pip-audit \
   --disable-pip \
   --require-hashes
 
-wheel=$(find dist -maxdepth 1 -type f -name 'proofstate-*.whl' -print -quit)
+wheel=$(find "$gate_tmp/dist" -maxdepth 1 -type f -name 'proofstate-*.whl' -print -quit)
 test -n "$wheel"
 uv venv --python 3.11 "$gate_tmp/venv"
 uv pip install --python "$gate_tmp/venv/bin/python" "$wheel"
 "$gate_tmp/venv/bin/proofstate" --version
+"$gate_tmp/venv/bin/proofstate" conformance
 "$gate_tmp/venv/bin/python" examples/basic/run.py
 
 python3 scripts/check_repository.py
