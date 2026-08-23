@@ -5,6 +5,15 @@ versions follow Semantic Versioning.
 
 ## [Unreleased]
 
+## [0.3.4] - 2026-08-24
+
+### Security
+
+- Ignored Git replacement refs so a pinned object ID cannot be redirected to a
+  different local object during evaluation.
+- Disabled lazy object fetching and forced evidence pathspecs to be literal for
+  every Git subprocess.
+
 ## [0.3.3] - 2026-08-24
 
 ### Changed
@@ -67,7 +76,8 @@ versions follow Semantic Versioning.
 - Adversarial, property-based, integration, and bounded performance tests.
 - Hardened CI, CodeQL, secret scanning, dependency updates, and release workflow.
 
-[Unreleased]: https://github.com/tovellan/proofstate/compare/v0.3.3...HEAD
+[Unreleased]: https://github.com/tovellan/proofstate/compare/v0.3.4...HEAD
+[0.3.4]: https://github.com/tovellan/proofstate/compare/v0.3.3...v0.3.4
 [0.3.3]: https://github.com/tovellan/proofstate/compare/v0.3.2...v0.3.3
 [0.3.2]: https://github.com/tovellan/proofstate/compare/v0.3.1...v0.3.2
 [0.3.1]: https://github.com/tovellan/proofstate/compare/v0.3.0...v0.3.1

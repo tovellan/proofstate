@@ -42,6 +42,71 @@ def test_worktree_edit_cannot_change_tracked_scorecard(
     assert result.passed
 
 
+def test_git_replacement_ref_cannot_change_pinned_evidence(
+    repository_fixture: RepositoryFixture,
+) -> None:
+    original_tree = git(
+        repository_fixture.root,
+        "rev-parse",
+        f"{repository_fixture.target_commit}^{{tree}}",
+    )
+    (repository_fixture.root / "src/widget.py").write_text("VALUE = 999\n", encoding="utf-8")
+    git(repository_fixture.root, "add", "--", "src/widget.py")
+    git(repository_fixture.root, "commit", "-m", "Create replacement content")
+    replacement_commit = git(repository_fixture.root, "rev-parse", "HEAD")
+    replacement_tree = git(repository_fixture.root, "rev-parse", f"{replacement_commit}^{{tree}}")
+    git(
+        repository_fixture.root,
+        "replace",
+        repository_fixture.target_commit,
+        replacement_commit,
+    )
+
+    assert (
+        git(
+            repository_fixture.root,
+            "rev-parse",
+            f"{repository_fixture.target_commit}^{{tree}}",
+        )
+        == replacement_tree
+    )
+    result = evaluate_scorecard(
+        ".proofstate/scorecard.yaml",
+        repository_path=repository_fixture.root,
+        scorecard_ref=repository_fixture.policy_commit,
+        evaluated_at=NOW,
+    )
+
+    assert result.passed
+    assert result.evidence_tree == original_tree
+
+
+def test_pathspec_metacharacters_are_literal_evidence_paths(
+    repository_fixture: RepositoryFixture,
+) -> None:
+    evidence_path = "evidence/[report].json"
+    (repository_fixture.root / evidence_path).write_text("{}\n", encoding="utf-8")
+    git(repository_fixture.root, "add", f":(literal){evidence_path}")
+    git(repository_fixture.root, "commit", "-m", "Add literal pathspec evidence")
+    target_commit = git(repository_fixture.root, "rev-parse", "HEAD")
+    scorecard = repository_fixture.copy_scorecard()
+    scorecard["repository"]["commit"] = target_commit
+    scorecard["assertions"] = [scorecard["assertions"][0]]
+    scorecard["assertions"][0]["evidence"]["machine"][0] = {
+        "type": "file",
+        "path": evidence_path,
+    }
+    repository_fixture.commit_policy(scorecard)
+
+    result = evaluate_scorecard(
+        ".proofstate/scorecard.yaml",
+        repository_path=repository_fixture.root,
+        evaluated_at=NOW,
+    )
+
+    assert result.passed
+
+
 def test_missing_machine_evidence_blocks_dependents(
     repository_fixture: RepositoryFixture,
 ) -> None:
