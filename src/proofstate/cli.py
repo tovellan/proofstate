@@ -10,9 +10,10 @@ from pathlib import Path
 from typing import NoReturn
 
 from proofstate import __version__
+from proofstate.conformance import ConformanceResult, export_conformance, run_conformance
 from proofstate.errors import ErrorCode, ProofStateError
 from proofstate.evaluate import Evaluation, evaluate_scorecard
-from proofstate.models import GateLevel, Scorecard, parse_timestamp
+from proofstate.models import GateLevel, HumanAttestation, Scorecard, parse_timestamp
 
 
 def _parser() -> argparse.ArgumentParser:
@@ -40,8 +41,25 @@ def _parser() -> argparse.ArgumentParser:
     check.add_argument("--at", help="RFC 3339 evaluation time; defaults to the current time")
     check.add_argument("--format", choices=["text", "json"], default="text")
 
-    schema = subparsers.add_parser("schema", help="print the scorecard JSON Schema")
+    schema = subparsers.add_parser("schema", help="print a versioned JSON Schema")
+    schema.add_argument(
+        "kind",
+        nargs="?",
+        choices=["scorecard", "attestation"],
+        default="scorecard",
+    )
     schema.add_argument("--format", choices=["json"], default="json")
+
+    conformance = subparsers.add_parser(
+        "conformance",
+        help="verify the installed v1alpha1 conformance bundle",
+    )
+    conformance.add_argument("--format", choices=["text", "json"], default="text")
+    conformance.add_argument(
+        "--export",
+        metavar="DIRECTORY",
+        help="write the verified corpus to a new directory",
+    )
     return parser
 
 
@@ -62,6 +80,13 @@ def _print_text(result: Evaluation) -> None:
         )
         for evidence in assertion.evidence:
             print(f"  {evidence.code.value} {evidence.message}")
+
+
+def _print_conformance_text(result: ConformanceResult) -> None:
+    verdict = "PASS" if result.passed else "FAIL"
+    print(f"{verdict} conformance={result.schema_version} cases={len(result.cases)}")
+    for case in result.cases:
+        print(f"[{('PASS' if case.passed else 'FAIL'):4}] {case.case_id} observed={case.observed}")
 
 
 def _fail(error: ProofStateError, output_format: str) -> NoReturn:
@@ -97,7 +122,29 @@ def _parse_time(value: str | None, output_format: str) -> datetime | None:
 def main(argv: list[str] | None = None) -> None:
     arguments = _parser().parse_args(argv)
     if arguments.command == "schema":
-        _print_json(Scorecard.model_json_schema())
+        model = Scorecard if arguments.kind == "scorecard" else HumanAttestation
+        _print_json(model.model_json_schema())
+        return
+    if arguments.command == "conformance":
+        if arguments.export:
+            try:
+                conformance_result = export_conformance(Path(arguments.export))
+            except (OSError, ValueError) as error:
+                _fail(
+                    ProofStateError(
+                        ErrorCode.CONFORMANCE_EXPORT_FAILED,
+                        str(error),
+                    ),
+                    arguments.format,
+                )
+        else:
+            conformance_result = run_conformance()
+        if arguments.format == "json":
+            _print_json(conformance_result.to_dict())
+        else:
+            _print_conformance_text(conformance_result)
+        if not conformance_result.passed:
+            raise SystemExit(1)
         return
 
     output_format: str = arguments.format

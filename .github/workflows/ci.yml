@@ -66,6 +66,8 @@ jobs:
           uv venv --python 3.11 clean-env
           uv pip install --python clean-env/bin/python dist/proofstate-*.whl
           clean-env/bin/proofstate --version
+          clean-env/bin/proofstate conformance
+          clean-env/bin/proofstate conformance --export clean-conformance
           clean-env/bin/python examples/basic/run.py
       - name: Upload distributions
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
