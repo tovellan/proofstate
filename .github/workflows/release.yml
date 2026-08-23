@@ -51,8 +51,15 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
           RELEASE_TAG: ${{ inputs.tag }}
-        run: >-
-          gh release create "$RELEASE_TAG" dist/*
-          --verify-tag
-          --title "ProofState ${RELEASE_TAG#v}"
-          --notes-file docs/release-notes/0.1.0.md
+        run: |
+          if [[ ! "$RELEASE_TAG" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "release tag must use vMAJOR.MINOR.PATCH" >&2
+            exit 1
+          fi
+          version=${RELEASE_TAG#v}
+          notes_file="docs/release-notes/$version.md"
+          test -f "$notes_file"
+          gh release create "$RELEASE_TAG" dist/* \
+            --verify-tag \
+            --title "ProofState $version" \
+            --notes-file "$notes_file"

@@ -11,6 +11,8 @@ versions follow Semantic Versioning.
   across concurrent CI jobs.
 - Limited distribution archives to reviewed package files and added the PEP 561
   marker for downstream type checkers.
+- Bound release notes to the exact semantic version tag selected by a
+  maintainer.
 
 ## [0.1.0] - 2026-08-24
 
