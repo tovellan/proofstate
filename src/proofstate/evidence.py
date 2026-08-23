@@ -127,25 +127,17 @@ def verify_file(
     )
 
 
-class _SymbolCollector(ast.NodeVisitor):
-    def __init__(self) -> None:
-        self.stack: list[str] = []
-        self.symbols: set[str] = set()
-
-    def _visit_named(self, node: ast.ClassDef | ast.FunctionDef | ast.AsyncFunctionDef) -> None:
-        self.stack.append(node.name)
-        self.symbols.add(".".join(self.stack))
-        self.generic_visit(node)
-        self.stack.pop()
-
-    def visit_ClassDef(self, node: ast.ClassDef) -> None:
-        self._visit_named(node)
-
-    def visit_FunctionDef(self, node: ast.FunctionDef) -> None:
-        self._visit_named(node)
-
-    def visit_AsyncFunctionDef(self, node: ast.AsyncFunctionDef) -> None:
-        self._visit_named(node)
+def _collect_pytest_symbols(tree: ast.Module) -> set[str]:
+    symbols: set[str] = set()
+    function_types = (ast.FunctionDef, ast.AsyncFunctionDef)
+    for node in tree.body:
+        if isinstance(node, function_types):
+            symbols.add(node.name)
+        elif isinstance(node, ast.ClassDef):
+            for child in node.body:
+                if isinstance(child, function_types):
+                    symbols.add(f"{node.name}.{child.name}")
+    return symbols
 
 
 def verify_test_symbol(
@@ -162,7 +154,7 @@ def verify_test_symbol(
     assert content is not None
     try:
         tree = ast.parse(content, filename=evidence.path)
-    except (SyntaxError, ValueError, TypeError):
+    except (SyntaxError, ValueError, TypeError, RecursionError):
         return EvidenceResult(
             evidence.type,
             False,
@@ -170,9 +162,8 @@ def verify_test_symbol(
             "test file is not valid Python source",
             evidence.path,
         )
-    collector = _SymbolCollector()
-    collector.visit(tree)
-    if evidence.symbol not in collector.symbols:
+    symbols = _collect_pytest_symbols(tree)
+    if evidence.symbol not in symbols:
         return EvidenceResult(
             evidence.type,
             False,
@@ -352,9 +343,18 @@ def verify_attestation(
     evaluated_at: datetime,
     max_bytes: int,
 ) -> EvidenceResult:
-    content, error = _read_evidence_blob(
-        repository, policy_commit, evidence.path, max_bytes, evidence.type
-    )
+    try:
+        content, error = _read_evidence_blob(
+            repository, policy_commit, evidence.path, max_bytes, evidence.type
+        )
+    except ProofStateError:
+        return EvidenceResult(
+            evidence.type,
+            False,
+            EvidenceCode.INTERNAL_ERROR,
+            "Git object verification failed closed",
+            evidence.path,
+        )
     if error is not None:
         return error
     assert content is not None

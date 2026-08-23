@@ -4,6 +4,9 @@ import io
 import tarfile
 import zipfile
 from pathlib import Path
+from typing import Any, cast
+
+import yaml
 
 from scripts.verify_release import SEMVER, source_version, verify_artifacts, verify_tag
 
@@ -13,7 +16,7 @@ def test_current_source_versions_agree() -> None:
 
     version, failures = source_version(root)
 
-    assert version == "0.3.6"
+    assert version == "0.3.7"
     assert failures == []
 
 
@@ -56,3 +59,41 @@ def test_artifact_verification_fails_on_stale_version(tmp_path: Path) -> None:
     failures = verify_artifacts(tmp_path, "0.2.1")
 
     assert len(failures) == 2
+
+
+def test_release_workflow_binds_and_attests_exact_artifacts() -> None:
+    root = Path(__file__).parents[1]
+    workflow = cast(
+        dict[str, Any],
+        yaml.safe_load((root / ".github/workflows/release.yml").read_text(encoding="utf-8")),
+    )
+    job = workflow["jobs"]["release"]
+
+    assert job["permissions"] == {
+        "contents": "write",
+        "id-token": "write",
+        "attestations": "write",
+    }
+    steps = job["steps"]
+    names = [step["name"] for step in steps]
+    identity = steps[names.index("Validate release identity")]["run"]
+    attestation = steps[names.index("Attest release distributions")]
+
+    assert names.index("Validate release identity") < names.index("Install uv and Python")
+    assert names.index("Verify both installed distributions") < names.index(
+        "Attest release distributions"
+    )
+    assert names.index("Attest release distributions") < names.index(
+        "Create release without publishing packages"
+    )
+    assert 'test "$GITHUB_REF" = "refs/heads/main"' in identity
+    assert 'test "$(git rev-parse "$tag_ref^{commit}")" = "$GITHUB_SHA"' in identity
+    assert 'test "$(git rev-parse HEAD)" = "$GITHUB_SHA"' in identity
+    assert attestation["uses"] == ("actions/attest@1e69f48acb82d1966a394da916b4c1698aa569d6")
+    assert attestation["with"] == {
+        "subject-path": (
+            "${{ github.workspace }}/dist/proofstate-*.whl\n"
+            "${{ github.workspace }}/dist/proofstate-*.tar.gz\n"
+        ),
+        "push-to-registry": False,
+    }

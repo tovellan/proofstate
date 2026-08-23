@@ -102,3 +102,35 @@ def test_cli_validation_error_uses_exit_two(
     assert stopped.value.code == 2
     payload = json.loads(capsys.readouterr().out)
     assert payload["code"] == "PS004_SCORECARD_NOT_FOUND"
+
+
+@pytest.mark.parametrize(
+    "arguments",
+    [
+        ["check", "--format", "json"],
+        ["check", "scorecard.yaml", "--require", "invalid", "--format=json"],
+    ],
+)
+def test_cli_argument_errors_honor_json_format(
+    arguments: list[str],
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    with pytest.raises(SystemExit) as stopped:
+        main(arguments)
+
+    captured = capsys.readouterr()
+    assert stopped.value.code == 2
+    assert json.loads(captured.out)["code"] == "PS001_INVALID_ARGUMENT"
+    assert captured.err == ""
+
+
+def test_cli_argument_errors_use_stable_text_error(
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    with pytest.raises(SystemExit) as stopped:
+        main(["check"])
+
+    captured = capsys.readouterr()
+    assert stopped.value.code == 2
+    assert captured.out == ""
+    assert captured.err.startswith("PS001_INVALID_ARGUMENT:")

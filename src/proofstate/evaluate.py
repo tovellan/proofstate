@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections import deque
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from pathlib import Path
@@ -214,16 +215,22 @@ def evaluate_scorecard(
     if instant.tzinfo is None or instant.utcoffset() is None:
         raise ProofStateError(ErrorCode.INVALID_TIME, "evaluation time must include an offset")
 
-    by_id = {assertion.id: assertion for assertion in scorecard.assertions}
     completed: dict[str, AssertionResult] = {}
-
-    def evaluate(assertion_id: str) -> AssertionResult:
-        if assertion_id in completed:
-            return completed[assertion_id]
-        assertion = by_id[assertion_id]
+    dependency_counts = {
+        assertion.id: len(assertion.depends_on) for assertion in scorecard.assertions
+    }
+    dependents: dict[str, list[str]] = {assertion.id: [] for assertion in scorecard.assertions}
+    ready = deque(
+        assertion.id for assertion in scorecard.assertions if dependency_counts[assertion.id] == 0
+    )
+    by_id = {assertion.id: assertion for assertion in scorecard.assertions}
+    for assertion in scorecard.assertions:
         for dependency in assertion.depends_on:
-            evaluate(dependency)
-        result = _evaluate_assertion(
+            dependents[dependency].append(assertion.id)
+    while ready:
+        assertion_id = ready.popleft()
+        assertion = by_id[assertion_id]
+        completed[assertion_id] = _evaluate_assertion(
             assertion,
             completed,
             repository,
@@ -231,10 +238,12 @@ def evaluate_scorecard(
             policy_commit,
             instant,
         )
-        completed[assertion_id] = result
-        return result
+        for dependent in dependents[assertion_id]:
+            dependency_counts[dependent] -= 1
+            if dependency_counts[dependent] == 0:
+                ready.append(dependent)
 
-    ordered_results = [evaluate(assertion.id) for assertion in scorecard.assertions]
+    ordered_results = [completed[assertion.id] for assertion in scorecard.assertions]
     achieved = GateLevel.RELEASE
     for assertion, result in zip(scorecard.assertions, ordered_results, strict=True):
         if not result.passed:

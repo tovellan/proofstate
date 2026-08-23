@@ -5,6 +5,24 @@ versions follow Semantic Versioning.
 
 ## [Unreleased]
 
+## [0.3.7] - 2026-08-24
+
+### Security
+
+- Bounded conformance reads before allocation and made dependency graph
+  validation and evaluation iterative through the declared assertion limit.
+- Restricted pytest symbol evidence to direct collectable definitions without
+  traversing test bodies or conditional suites.
+- Bound release tags to the exact protected `main` dispatch commit and added
+  explicit build provenance for both distribution formats.
+
+### Fixed
+
+- Converted unexpected attestation Git failures into the same fail-closed
+  evidence result used by machine evidence.
+- Returned the versioned JSON error envelope for command syntax and choice
+  errors when JSON output is requested.
+
 ## [0.3.6] - 2026-08-24
 
 ### Fixed
@@ -103,7 +121,8 @@ versions follow Semantic Versioning.
 - Adversarial, property-based, integration, and bounded performance tests.
 - Hardened CI, CodeQL, secret scanning, dependency updates, and release workflow.
 
-[Unreleased]: https://github.com/tovellan/proofstate/compare/v0.3.6...HEAD
+[Unreleased]: https://github.com/tovellan/proofstate/compare/v0.3.7...HEAD
+[0.3.7]: https://github.com/tovellan/proofstate/compare/v0.3.6...v0.3.7
 [0.3.6]: https://github.com/tovellan/proofstate/compare/v0.3.5...v0.3.6
 [0.3.5]: https://github.com/tovellan/proofstate/compare/v0.3.4...v0.3.5
 [0.3.4]: https://github.com/tovellan/proofstate/compare/v0.3.3...v0.3.4

@@ -1,12 +1,19 @@
 from __future__ import annotations
 
+import io
 import json
 import shutil
 from pathlib import Path
+from typing import Any, cast
 
 import pytest
 
-from proofstate.conformance import export_conformance, run_conformance
+from proofstate.conformance import (
+    CONFORMANCE_MAX_BYTES,
+    _read_bounded,
+    export_conformance,
+    run_conformance,
+)
 
 
 def fixture_root() -> Path:
@@ -81,3 +88,41 @@ def test_conformance_export_refuses_existing_destination(tmp_path: Path) -> None
         export_conformance(destination, fixture_root())
 
     assert marker.read_text(encoding="utf-8") == "keep"
+
+
+def test_conformance_read_stops_at_limit_plus_one() -> None:
+    class GuardedStream(io.BytesIO):
+        def __init__(self, content: bytes) -> None:
+            super().__init__(content)
+            self.requests: list[int] = []
+            self.returned = 0
+
+        def read(self, size: int | None = -1) -> bytes:
+            if size is None or size < 0:
+                raise AssertionError("unbounded reads are not allowed")
+            self.requests.append(size)
+            content = super().read(size)
+            self.returned += len(content)
+            return content
+
+    class GuardedResource:
+        def __init__(self, content: bytes) -> None:
+            self.content = content
+            self.stream: GuardedStream | None = None
+
+        def open(self, mode: str) -> GuardedStream:
+            assert mode == "rb"
+            self.stream = GuardedStream(self.content)
+            return self.stream
+
+        def read_bytes(self) -> bytes:
+            raise AssertionError("read_bytes would load the unbounded resource")
+
+    resource = GuardedResource(b"x" * (CONFORMANCE_MAX_BYTES + 2))
+
+    with pytest.raises(ValueError, match="exceeds the one MiB limit"):
+        _read_bounded(cast(Any, resource))
+
+    assert resource.stream is not None
+    assert resource.stream.requests == [CONFORMANCE_MAX_BYTES + 1]
+    assert resource.stream.returned == CONFORMANCE_MAX_BYTES + 1

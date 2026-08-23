@@ -93,7 +93,8 @@ def _fixture_root() -> Traversable:
 
 
 def _read_bounded(path: Traversable) -> bytes:
-    content = path.read_bytes()
+    with path.open("rb") as source:
+        content = source.read(CONFORMANCE_MAX_BYTES + 1)
     if len(content) > CONFORMANCE_MAX_BYTES:
         raise ValueError("conformance file exceeds the one MiB limit")
     return content

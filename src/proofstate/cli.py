@@ -16,8 +16,13 @@ from proofstate.evaluate import Evaluation, evaluate_scorecard
 from proofstate.models import GateLevel, HumanAttestation, Scorecard, parse_timestamp
 
 
+class _ArgumentParser(argparse.ArgumentParser):
+    def error(self, message: str) -> NoReturn:
+        raise ProofStateError(ErrorCode.INVALID_ARGUMENT, message)
+
+
 def _parser() -> argparse.ArgumentParser:
-    parser = argparse.ArgumentParser(
+    parser = _ArgumentParser(
         prog="proofstate",
         description="Verify repository readiness evidence against pinned Git trees.",
     )
@@ -104,6 +109,16 @@ def _fail(error: ProofStateError, output_format: str) -> NoReturn:
     raise SystemExit(2)
 
 
+def _requested_format(arguments: list[str]) -> str:
+    output_format = "text"
+    for index, argument in enumerate(arguments):
+        if argument.startswith("--format="):
+            output_format = argument.partition("=")[2]
+        elif argument == "--format" and index + 1 < len(arguments):
+            output_format = arguments[index + 1]
+    return "json" if output_format == "json" else "text"
+
+
 def _parse_time(value: str | None, output_format: str) -> datetime | None:
     if value is None:
         return None
@@ -120,7 +135,12 @@ def _parse_time(value: str | None, output_format: str) -> datetime | None:
 
 
 def main(argv: list[str] | None = None) -> None:
-    arguments = _parser().parse_args(argv)
+    raw_arguments = list(sys.argv[1:] if argv is None else argv)
+    requested_format = _requested_format(raw_arguments)
+    try:
+        arguments = _parser().parse_args(raw_arguments)
+    except ProofStateError as error:
+        _fail(error, requested_format)
     if arguments.command == "schema":
         model = Scorecard if arguments.kind == "scorecard" else HumanAttestation
         _print_json(model.model_json_schema())

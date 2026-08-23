@@ -17,6 +17,8 @@ careful implementation, reliable follow-through, and respect for project
 policies. Maintainer access can be removed after sustained inactivity, misuse of
 access, or conduct violations. No maintainer role is permanent or transferable.
 
-At least one approving maintainer and passing required checks are expected for a
-change to `main`. Emergency security fixes can use an abbreviated review, with a
-follow-up record after disclosure.
+Every change to `main` requires passing status checks and at least one
+GitHub-recorded approval from someone other than the last pusher. Stale
+approvals are dismissed, conversations must be resolved, and branch protection
+also applies to administrators. Emergency security fixes can receive expedited
+review, but cannot bypass these controls.

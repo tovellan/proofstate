@@ -15,6 +15,7 @@ Repository and input failures exit with status 2 and a stable code.
 | `PS009_UNRELATED_COMMIT` | The evidence commit is not an ancestor of the scorecard revision. |
 | `PS010_UNSUPPORTED_OBJECT_FORMAT` | Git reports an unsupported object format. |
 | `PS011_INVALID_TIME` | The evaluation time is invalid or lacks an offset. |
+| `PS012_CONFORMANCE_EXPORT_FAILED` | The verified fixture corpus could not be exported safely. |
 
 Evidence failures are represented inside a completed evaluation. `PSE000` is a
 verified item; `PSE1xx` covers files, `PSE2xx` test symbols, `PSE3xx` structured

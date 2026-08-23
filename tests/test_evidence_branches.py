@@ -1,8 +1,9 @@
 from __future__ import annotations
 
+import ast
 import json
 from datetime import UTC, datetime
-from typing import Any, cast
+from typing import Any, NoReturn, cast
 
 import pytest
 
@@ -159,6 +160,80 @@ def test_invalid_python_source_is_rejected() -> None:
         "a" * 40,
         100,
     )
+    assert result.code == EvidenceCode.TEST_PARSE_FAILED
+
+
+@pytest.mark.parametrize(
+    ("content", "symbol"),
+    [
+        (b"if False:\n    def test_hidden():\n        pass\n", "test_hidden"),
+        (
+            b"class TestHidden:\n    if False:\n        def test_method(self):\n            pass\n",
+            "TestHidden.test_method",
+        ),
+        (
+            b"if False:\n    class TestHidden:\n        def test_method(self):\n            pass\n",
+            "TestHidden.test_method",
+        ),
+    ],
+)
+def test_conditional_pytest_symbols_are_not_treated_as_collectable(
+    content: bytes,
+    symbol: str,
+) -> None:
+    result = verify_test_symbol(
+        SymbolEvidence(
+            type="test_symbol",
+            path="tests/test_hidden.py",
+            symbol=symbol,
+            framework="pytest",
+        ),
+        repository_with(content),
+        "a" * 40,
+        10_000,
+    )
+
+    assert result.code == EvidenceCode.TEST_SYMBOL_MISSING
+
+
+def test_deep_test_body_does_not_recurse_during_symbol_collection() -> None:
+    expression = b"+".join([b"1"] * 500)
+    content = b"def test_deep():\n    value = " + expression + b"\n"
+
+    result = verify_test_symbol(
+        SymbolEvidence(
+            type="test_symbol",
+            path="tests/test_deep.py",
+            symbol="test_deep",
+            framework="pytest",
+        ),
+        repository_with(content),
+        "a" * 40,
+        10_000,
+    )
+
+    assert result.code == EvidenceCode.VERIFIED
+
+
+def test_parser_recursion_fails_closed(monkeypatch: pytest.MonkeyPatch) -> None:
+    def recurse(*args: Any, **kwargs: Any) -> NoReturn:
+        del args, kwargs
+        raise RecursionError
+
+    monkeypatch.setattr(ast, "parse", recurse)
+
+    result = verify_test_symbol(
+        SymbolEvidence(
+            type="test_symbol",
+            path="tests/test_deep.py",
+            symbol="test_deep",
+            framework="pytest",
+        ),
+        repository_with(b"def test_deep():\n    pass\n"),
+        "a" * 40,
+        10_000,
+    )
+
     assert result.code == EvidenceCode.TEST_PARSE_FAILED
 
 
@@ -377,3 +452,20 @@ def test_git_failure_in_machine_evidence_fails_closed() -> None:
         100,
     )
     assert result.code == EvidenceCode.INTERNAL_ERROR
+
+
+def test_git_failure_in_attestation_fails_closed() -> None:
+    result = verify_attestation(
+        AttestationEvidence(type="human_attestation", path="review.json"),
+        repository_with(ProofStateError(ErrorCode.GIT_COMMAND_FAILED, "failed")),
+        "b" * 40,
+        "a" * 40,
+        "example.invalid/repository",
+        "review",
+        datetime(2026, 1, 1, tzinfo=UTC),
+        100,
+    )
+
+    assert result.passed is False
+    assert result.code == EvidenceCode.INTERNAL_ERROR
+    assert result.path == "review.json"

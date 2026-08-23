@@ -31,16 +31,21 @@ passing.
 - Evidence is read by object ID from commit trees. Symlinks are not followed.
 - Evidence commits use full object IDs and must be ancestors of the scorecard
   revision.
-- Inputs are byte-bounded before parsing.
+- Inputs are byte-bounded before parsing. Installed conformance inputs are read
+  only through the limit plus one byte.
 - YAML uses safe constructors and rejects duplicate keys, non-string mapping
   keys, aliases, anchors, and explicit tags. Implicit timestamps remain strings
   until schema validation. JSON duplicate keys are rejected.
 - Python tests are parsed with `ast`; repository code is never imported or run.
 - Structured checks use a fixed operator set with no expressions or regular
-  expressions.
+  expressions. Object equality compares key sets once and uses direct key
+  lookups.
 - Attestations require a bounded statement, aware timestamps, an unexpired
   window, and exact scope.
-- Missing dependencies and unexpected Git evidence errors fail closed.
+- Dependency validation and evaluation are iterative within the declared
+  1,000-assertion limit.
+- Missing dependencies and unexpected Git errors for every evidence type fail
+  closed.
 
 ## Attacker goals considered
 

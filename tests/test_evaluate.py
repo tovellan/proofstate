@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from datetime import UTC, datetime
+from typing import Any
 
 import pytest
 
@@ -10,6 +11,25 @@ from proofstate.models import GateLevel
 from tests.conftest import RepositoryFixture, git, write_json
 
 NOW = datetime(2026, 8, 24, tzinfo=UTC)
+
+
+def dependency_chain(size: int, *, cycle: bool = False) -> list[dict[str, Any]]:
+    assertions: list[dict[str, Any]] = []
+    for index in range(size):
+        dependencies = [] if index == 0 else [f"item-{index - 1}"]
+        if cycle and index == 0:
+            dependencies = [f"item-{size - 1}"]
+        assertions.append(
+            {
+                "id": f"item-{index}",
+                "title": f"Item {index}",
+                "severity": "low",
+                "failure_cap": "none",
+                "depends_on": dependencies,
+                "evidence": {"machine": [{"type": "file", "path": "missing.txt"}]},
+            }
+        )
+    return assertions
 
 
 def test_complete_scorecard_passes(repository_fixture: RepositoryFixture) -> None:
@@ -218,6 +238,40 @@ def test_scorecard_cycle_is_rejected(repository_fixture: RepositoryFixture) -> N
     assert caught.value.code == ErrorCode.INVALID_SCORECARD
     assert caught.value.details is not None
     assert "input_value" not in str(caught.value.details).lower()
+
+
+def test_maximum_dependency_chain_evaluates_without_recursion(
+    repository_fixture: RepositoryFixture,
+) -> None:
+    scorecard = repository_fixture.copy_scorecard()
+    scorecard["assertions"] = dependency_chain(1_000)
+    repository_fixture.commit_policy(scorecard)
+
+    result = evaluate_scorecard(
+        ".proofstate/scorecard.yaml",
+        repository_path=repository_fixture.root,
+        evaluated_at=NOW,
+    )
+
+    assert result.assertions[0].status == "fail"
+    assert [assertion.status for assertion in result.assertions[1:]] == ["blocked"] * 999
+
+
+def test_maximum_dependency_cycle_is_reported_as_invalid_scorecard(
+    repository_fixture: RepositoryFixture,
+) -> None:
+    scorecard = repository_fixture.copy_scorecard()
+    scorecard["assertions"] = dependency_chain(1_000, cycle=True)
+    repository_fixture.commit_policy(scorecard)
+
+    with pytest.raises(ProofStateError) as caught:
+        evaluate_scorecard(
+            ".proofstate/scorecard.yaml",
+            repository_path=repository_fixture.root,
+            evaluated_at=NOW,
+        )
+
+    assert caught.value.code == ErrorCode.INVALID_SCORECARD
 
 
 def test_symlink_is_not_regular_file_evidence(repository_fixture: RepositoryFixture) -> None:

@@ -10,7 +10,9 @@ proofstate check SCORECARD [--repo PATH] [--scorecard-ref REF]
 
 `SCORECARD` is repository-relative and loaded from `--scorecard-ref`, not the
 working tree. `--require` defaults to `release`. `--at` accepts an RFC 3339 time
-with an offset. JSON output is intended for CI and other tools.
+with an offset. JSON output is intended for CI and other tools. Argument syntax
+and choice errors also use the versioned error envelope when `--format json` or
+`--format=json` is requested.
 
 Exit status:
 

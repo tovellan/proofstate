@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from typing import Any
+
 import pytest
 from hypothesis import given
 from hypothesis import strategies as st
@@ -21,6 +23,28 @@ from proofstate.models import (
 from proofstate.models import (
     TestSymbolEvidence as SymbolEvidence,
 )
+
+
+def dependency_chain_scorecard(size: int, *, cycle: bool = False) -> dict[str, Any]:
+    assertions: list[dict[str, Any]] = []
+    for index in range(size):
+        dependencies = [] if index == 0 else [f"item-{index - 1}"]
+        if cycle and index == 0:
+            dependencies = [f"item-{size - 1}"]
+        assertions.append(
+            {
+                "id": f"item-{index}",
+                "title": f"Item {index}",
+                "severity": "low",
+                "depends_on": dependencies,
+                "evidence": {"machine": [{"type": "file", "path": "evidence.txt"}]},
+            }
+        )
+    return {
+        "schema_version": "proofstate.dev/scorecard/v1alpha1",
+        "repository": {"identity": "example.invalid/repo", "commit": "a" * 40},
+        "assertions": assertions,
+    }
 
 
 @given(st.lists(st.sampled_from(["..", ".", ".git"]), min_size=1).map("/".join))
@@ -145,6 +169,17 @@ def test_scorecard_rejects_duplicate_and_unknown_assertions() -> None:
     unknown = {**assertion, "depends_on": ["absent"]}
     with pytest.raises(ValidationError):
         Scorecard.model_validate({**base, "assertions": [unknown]})
+
+
+def test_maximum_dependency_chain_validates_without_recursion() -> None:
+    scorecard = Scorecard.model_validate(dependency_chain_scorecard(1_000))
+
+    assert len(scorecard.assertions) == 1_000
+
+
+def test_maximum_dependency_cycle_is_a_validation_error() -> None:
+    with pytest.raises(ValidationError, match="dependency graph contains a cycle"):
+        Scorecard.model_validate(dependency_chain_scorecard(1_000, cycle=True))
 
 
 def test_timestamp_and_attestation_validators() -> None:

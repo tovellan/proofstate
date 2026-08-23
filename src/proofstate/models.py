@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import re
+from collections import deque
 from datetime import datetime
 from enum import StrEnum
 from pathlib import PurePosixPath
@@ -223,23 +224,25 @@ class Scorecard(StrictModel):
                     f"assertion {assertion.id!r} has unknown dependencies: {sorted(missing)!r}"
                 )
 
-        visiting: set[str] = set()
-        visited: set[str] = set()
         by_id = {assertion.id: assertion for assertion in self.assertions}
-
-        def visit(assertion_id: str) -> None:
-            if assertion_id in visiting:
-                raise ValueError("assertion dependency graph contains a cycle")
-            if assertion_id in visited:
-                return
-            visiting.add(assertion_id)
-            for dependency in by_id[assertion_id].depends_on:
-                visit(dependency)
-            visiting.remove(assertion_id)
-            visited.add(assertion_id)
-
-        for assertion_id in ids:
-            visit(assertion_id)
+        dependency_counts = {
+            assertion.id: len(assertion.depends_on) for assertion in self.assertions
+        }
+        dependents: dict[str, list[str]] = {assertion_id: [] for assertion_id in ids}
+        for assertion in self.assertions:
+            for dependency in assertion.depends_on:
+                dependents[dependency].append(assertion.id)
+        ready = deque(assertion_id for assertion_id in ids if dependency_counts[assertion_id] == 0)
+        visited = 0
+        while ready:
+            assertion_id = ready.popleft()
+            visited += 1
+            for dependent in dependents[assertion_id]:
+                dependency_counts[dependent] -= 1
+                if dependency_counts[dependent] == 0:
+                    ready.append(dependent)
+        if visited != len(by_id):
+            raise ValueError("assertion dependency graph contains a cycle")
         return self
 
 

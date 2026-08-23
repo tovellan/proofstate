@@ -37,4 +37,5 @@ remain roadmap work and will be added without changing existing case outcomes.
 
 Installed fixture paths are single filenames, case identifiers are unique, and
 each file is limited to one MiB. A missing, oversized, or digest-mismatched file
-causes the bundle verdict to fail closed.
+causes the bundle verdict to fail closed. Reads stop after at most one MiB plus
+one byte, before parsing or hashing.

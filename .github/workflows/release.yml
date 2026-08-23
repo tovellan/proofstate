@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
     inputs:
       tag:
-        description: Existing release tag, for example v0.3.6
+        description: Existing release tag, for example v0.3.7
         required: true
         type: string
       confirm:
@@ -25,6 +25,8 @@ jobs:
       RELEASE_TAG: ${{ inputs.tag }}
     permissions:
       contents: write
+      id-token: write
+      attestations: write
     steps:
       - name: Check out the requested tag
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -32,6 +34,15 @@ jobs:
           ref: ${{ inputs.tag }}
           fetch-depth: 0
           persist-credentials: false
+      - name: Validate release identity
+        run: |
+          test "$GITHUB_REF" = "refs/heads/main"
+          tag_ref="refs/tags/$RELEASE_TAG"
+          test "$(git cat-file -t "$tag_ref")" = "tag"
+          test "$(git rev-parse "$tag_ref^{commit}")" = "$GITHUB_SHA"
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          git fetch --force --no-tags origin '+refs/heads/main:refs/remotes/origin/main'
+          git merge-base --is-ancestor "$GITHUB_SHA" refs/remotes/origin/main
       - name: Install uv and Python
         uses: astral-sh/setup-uv@20cfd1bf945f4377ade1205e4dbc17946fc9a30d # v10.0.1
         with:
@@ -43,8 +54,6 @@ jobs:
       - name: Validate source and tests
         run: |
           python3 scripts/verify_release.py --tag "$RELEASE_TAG"
-          git fetch --force --no-tags origin '+refs/heads/main:refs/remotes/origin/main'
-          git merge-base --is-ancestor HEAD refs/remotes/origin/main
           uv run ruff format --check .
           uv run ruff check .
           uv run mypy src/proofstate tests
@@ -66,6 +75,13 @@ jobs:
           sdist-env/bin/proofstate --version
           sdist-env/bin/proofstate conformance
           sdist-env/bin/proofstate conformance --export sdist-conformance
+      - name: Attest release distributions
+        uses: actions/attest@1e69f48acb82d1966a394da916b4c1698aa569d6 # v4.2.2
+        with:
+          subject-path: |
+            ${{ github.workspace }}/dist/proofstate-*.whl
+            ${{ github.workspace }}/dist/proofstate-*.tar.gz
+          push-to-registry: false
       - name: Create release without publishing packages
         env:
           GH_TOKEN: ${{ github.token }}
