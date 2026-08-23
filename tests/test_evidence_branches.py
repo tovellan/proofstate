@@ -97,6 +97,8 @@ def test_oversized_json_pointer_index_is_missing() -> None:
         (1, ArtifactOperator.NOT_EQUALS, 2, True),
         ({"key": 1}, ArtifactOperator.CONTAINS, "key", True),
         ({"key": 1}, ArtifactOperator.CONTAINS, [], False),
+        ({1: "value"}, ArtifactOperator.CONTAINS, True, False),
+        ([1], ArtifactOperator.CONTAINS, True, False),
         ("ready", ArtifactOperator.CONTAINS, "ead", True),
         ("ready", ArtifactOperator.CONTAINS, 1, False),
         (7, ArtifactOperator.CONTAINS, 7, False),

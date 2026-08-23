@@ -246,12 +246,13 @@ def _artifact_check_passes(value: Any, check: ArtifactCheck) -> bool:
         return value != check.expected or type(value) is not type(check.expected)
     if check.operator == ArtifactOperator.CONTAINS:
         if isinstance(value, dict):
-            try:
-                return check.expected in value
-            except TypeError:
-                return False
+            return any(
+                type(item) is type(check.expected) and item == check.expected for item in value
+            )
         if isinstance(value, list):
-            return check.expected in value
+            return any(
+                type(item) is type(check.expected) and item == check.expected for item in value
+            )
         if isinstance(value, str):
             return isinstance(check.expected, str) and check.expected in value
         return False

@@ -31,6 +31,16 @@ def test_nonstandard_json_constants_are_rejected(constant: bytes) -> None:
         load_document(b'{"value": ' + constant + b"}", format_hint="json")
 
 
+def test_non_finite_yaml_number_is_rejected() -> None:
+    with pytest.raises(DocumentError):
+        load_document(b"value: .inf\n")
+
+
+def test_oversized_json_integer_is_rejected() -> None:
+    with pytest.raises(DocumentError):
+        load_document(b'{"value": ' + b"9" * 5_000 + b"}", format_hint="json")
+
+
 def test_excessively_nested_json_is_rejected() -> None:
     content = ("[" * 2_000 + "0" + "]" * 2_000).encode()
     with pytest.raises(DocumentError):

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import math
 from collections.abc import Hashable
 from typing import Any, NoReturn
 
@@ -63,6 +64,8 @@ def _check_document_depth(document: Any) -> Any:
         value, depth = pending.pop()
         if depth > MAX_DOCUMENT_DEPTH:
             raise DocumentError(f"document nesting exceeds {MAX_DOCUMENT_DEPTH} levels")
+        if isinstance(value, float) and not math.isfinite(value):
+            raise DocumentError("non-finite numbers are not allowed")
         if isinstance(value, dict):
             pending.extend((item, depth + 1) for item in value.values())
         elif isinstance(value, list):
@@ -85,7 +88,7 @@ def load_document(content: bytes, *, format_hint: str | None = None) -> Any:
                     parse_constant=_reject_json_constant,
                 )
             )
-        except (json.JSONDecodeError, DocumentError, RecursionError) as error:
+        except (ValueError, RecursionError) as error:
             raise DocumentError(str(error)) from error
 
     try:
@@ -94,5 +97,5 @@ def load_document(content: bytes, *, format_hint: str | None = None) -> Any:
                 raise DocumentError("YAML aliases, anchors, and explicit tags are not allowed")
         # UniqueKeyLoader derives from SafeLoader and cannot construct Python objects.
         return _check_document_depth(yaml.load(text, Loader=UniqueKeyLoader))  # noqa: S506
-    except (yaml.YAMLError, DocumentError, RecursionError) as error:
+    except (yaml.YAMLError, ValueError, RecursionError) as error:
         raise DocumentError(str(error)) from error

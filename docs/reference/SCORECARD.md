@@ -55,10 +55,11 @@ symbol: TestRelease.test_candidate
 ```
 
 ProofState parses Python source and finds the dotted function or class-method
-name. It does not import the module, collect pytest parameters, or execute the
-test. Symbol existence proves that a named test is represented in the pinned
-tree, not that the test passed. Pair it with a structured result artifact when a
-passing execution is required.
+name. A symbol must be a top-level `test_*` function or a `Test*` class's
+`test_*` method. ProofState does not import the module, collect pytest
+parameters, or execute the test. Symbol existence proves that a named test is
+represented in the pinned tree, not that the test passed. Pair it with a
+structured result artifact when a passing execution is required.
 
 ## Structured artifact evidence
 

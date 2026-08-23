@@ -26,8 +26,9 @@ and tree IDs for each.
 
 1. Discover the Git worktree from `--repo`.
 2. Resolve `--scorecard-ref` and read the scorecard blob from that commit.
-3. Parse bounded UTF-8 YAML or JSON with duplicate keys, nonstandard JSON
-   constants, aliases, anchors, and explicit YAML tags rejected.
+3. Parse bounded UTF-8 YAML or JSON with duplicate keys, non-finite numbers,
+   nonstandard JSON constants, aliases, anchors, and explicit YAML tags
+   rejected.
 4. Validate the closed schema and dependency graph.
 5. Resolve the full evidence commit and prove it is an ancestor of the scorecard
    commit.
