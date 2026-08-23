@@ -8,7 +8,7 @@ on:
         required: true
         type: string
       confirm:
-        description: Confirm creation of a public GitHub release
+        description: Confirm creation of a GitHub release
         required: true
         default: false
         type: boolean
@@ -49,7 +49,7 @@ jobs:
           uv run pytest --cov=proofstate --cov-report=term-missing
           python3 scripts/check_repository.py
       - name: Build distributions
-        run: uv build
+        run: make build
       - name: Verify release artifact versions
         run: python3 scripts/verify_release.py --tag "$RELEASE_TAG" --dist dist
       - name: Verify installed conformance bundle
