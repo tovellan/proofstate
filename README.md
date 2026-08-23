@@ -30,7 +30,7 @@ ProofState requires Python 3.11 or later and Git.
 Install the released source with `uv`:
 
 ```sh
-uv tool install git+https://github.com/tovellan/proofstate@v0.3.1
+uv tool install git+https://github.com/tovellan/proofstate@v0.3.2
 proofstate --version
 ```
 
@@ -43,7 +43,7 @@ uv sync --locked --all-groups
 uv run proofstate --version
 ```
 
-No package is published to PyPI in version 0.3.1.
+No package is published to PyPI in version 0.3.2.
 
 ## Run the complete example
 
@@ -166,7 +166,7 @@ A human attestation is a scoped declaration, not a cryptographic identity proof.
 ProofState protects its content from uncommitted mutation by loading it from the
 scorecard Git tree, and checks its time and scope. Teams that need signer
 authentication should require signed commits or add a signature-verification
-step before ProofState. Version 0.3.1 does not fetch remote evidence, execute
+step before ProofState. Version 0.3.2 does not fetch remote evidence, execute
 tests, validate commit signatures, or establish that an attested identity maps
 to a real person.
 
@@ -190,7 +190,7 @@ full-history secret scan when `gitleaks` is installed.
 
 ## Status
 
-ProofState 0.3.1 supports local Git worktrees and SHA-1 or SHA-256 Git object
+ProofState 0.3.2 supports local Git worktrees and SHA-1 or SHA-256 Git object
 formats. The schema is `v1alpha1`: unknown fields fail validation, but compatible
 additive evolution is not promised until a stable schema is released.
 
