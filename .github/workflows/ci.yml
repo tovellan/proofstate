@@ -58,7 +58,7 @@ jobs:
         with:
           version: "0.10.2"
           python-version: "3.11"
-          enable-cache: true
+          enable-cache: false
       - name: Build distributions
         run: uv build
       - name: Install wheel in a clean environment
@@ -89,7 +89,7 @@ jobs:
         with:
           version: "0.10.2"
           python-version: "3.11"
-          enable-cache: true
+          enable-cache: false
       - name: Install locked dependencies
         run: uv sync --locked --all-groups
       - name: Check tracked repository content

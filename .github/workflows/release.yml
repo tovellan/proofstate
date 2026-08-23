@@ -35,7 +35,7 @@ jobs:
         with:
           version: "0.10.2"
           python-version: "3.11"
-          enable-cache: true
+          enable-cache: false
       - name: Install locked dependencies
         run: uv sync --locked --all-groups
       - name: Validate source and tests
