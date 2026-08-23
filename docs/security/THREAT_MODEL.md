@@ -24,7 +24,8 @@ passing.
 ## Controls
 
 - Git commands use argument arrays, no shell, a fixed timeout, and read-only
-  object operations.
+  object operations. Replacement refs are ignored, pathspecs are literal, and
+  missing objects cannot trigger a lazy network fetch.
 - Paths are relative POSIX paths; absolute paths, dot segments, `.git`, NUL, and
   backslashes are rejected.
 - Evidence is read by object ID from commit trees. Symlinks are not followed.
@@ -44,6 +45,7 @@ passing.
 
 - Edit the working scorecard without committing it.
 - Refer to evidence from an unrelated commit in the same object database.
+- Redirect a named object through a local Git replacement ref.
 - Use a symlink to point outside the repository.
 - Hide a duplicate key in YAML or JSON.
 - Use YAML construction tags or aliases to create unsafe or oversized objects.
