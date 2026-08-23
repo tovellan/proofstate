@@ -1,0 +1,58 @@
+name: Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Existing release tag, for example v0.1.0
+        required: true
+        type: string
+      confirm:
+        description: Confirm creation of a public GitHub release
+        required: true
+        default: false
+        type: boolean
+
+permissions:
+  contents: read
+
+jobs:
+  release:
+    name: Validate and create GitHub release
+    if: ${{ inputs.confirm }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Check out the requested tag
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          ref: ${{ inputs.tag }}
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Install uv and Python
+        uses: astral-sh/setup-uv@d0cc045d04ccac9d8b7881df0226f9e82c39688e # v6
+        with:
+          version: "0.10.2"
+          python-version: "3.11"
+          enable-cache: true
+      - name: Install locked dependencies
+        run: uv sync --locked --all-groups
+      - name: Validate source and tests
+        run: |
+          uv run ruff format --check .
+          uv run ruff check .
+          uv run mypy src/proofstate tests
+          uv run pytest --cov=proofstate --cov-report=term-missing
+          python3 scripts/check_repository.py
+      - name: Build distributions
+        run: uv build
+      - name: Create release without publishing packages
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ inputs.tag }}
+        run: >-
+          gh release create "$RELEASE_TAG" dist/*
+          --verify-tag
+          --title "ProofState ${RELEASE_TAG#v}"
+          --notes-file docs/release-notes/0.1.0.md
