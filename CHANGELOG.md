@@ -5,6 +5,21 @@ versions follow Semantic Versioning.
 
 ## [Unreleased]
 
+## [0.3.5] - 2026-08-24
+
+### Security
+
+- Rejected duplicate, non-regular, encrypted, corrupt, oversized, and
+  unsupported-compression distribution members.
+- Verified wheel `RECORD` membership, hashes, sizes, and source-byte parity
+  across the repository, wheel, and source archive.
+
+### Changed
+
+- Clean-installed and exercised both built distribution formats in local, CI,
+  and public release gates.
+- Required release tags to identify commits already present on `main`.
+
 ## [0.3.4] - 2026-08-24
 
 ### Security
@@ -76,7 +91,8 @@ versions follow Semantic Versioning.
 - Adversarial, property-based, integration, and bounded performance tests.
 - Hardened CI, CodeQL, secret scanning, dependency updates, and release workflow.
 
-[Unreleased]: https://github.com/tovellan/proofstate/compare/v0.3.4...HEAD
+[Unreleased]: https://github.com/tovellan/proofstate/compare/v0.3.5...HEAD
+[0.3.5]: https://github.com/tovellan/proofstate/compare/v0.3.4...v0.3.5
 [0.3.4]: https://github.com/tovellan/proofstate/compare/v0.3.3...v0.3.4
 [0.3.3]: https://github.com/tovellan/proofstate/compare/v0.3.2...v0.3.3
 [0.3.2]: https://github.com/tovellan/proofstate/compare/v0.3.1...v0.3.2
