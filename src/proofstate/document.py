@@ -4,11 +4,10 @@ from __future__ import annotations
 
 import json
 import math
-from collections.abc import Hashable
 from typing import Any, NoReturn
 
 import yaml
-from yaml.nodes import MappingNode
+from yaml.nodes import MappingNode, ScalarNode
 from yaml.tokens import AliasToken, AnchorToken, TagToken
 
 MAX_DOCUMENT_DEPTH = 100
@@ -26,22 +25,30 @@ def _construct_unique_mapping(
     loader: UniqueKeyLoader,
     node: MappingNode,
     deep: bool = False,
-) -> dict[Hashable, Any]:
+) -> dict[str, Any]:
     loader.flatten_mapping(node)
-    mapping: dict[Hashable, Any] = {}
+    mapping: dict[str, Any] = {}
     for key_node, value_node in node.value:
         key = loader.construct_object(key_node, deep=deep)
-        if not isinstance(key, Hashable):
-            raise DocumentError("mapping keys must be hashable")
+        if not isinstance(key, str):
+            raise DocumentError("mapping keys must be strings")
         if key in mapping:
             raise DocumentError(f"duplicate mapping key: {key!r}")
         mapping[key] = loader.construct_object(value_node, deep=deep)
     return mapping
 
 
+def _construct_timestamp_string(loader: UniqueKeyLoader, node: ScalarNode) -> str:
+    return loader.construct_scalar(node)
+
+
 UniqueKeyLoader.add_constructor(
     yaml.resolver.BaseResolver.DEFAULT_MAPPING_TAG,
     _construct_unique_mapping,
+)
+UniqueKeyLoader.add_constructor(
+    "tag:yaml.org,2002:timestamp",
+    _construct_timestamp_string,
 )
 
 
@@ -67,7 +74,11 @@ def _check_document_depth(document: Any) -> Any:
         if isinstance(value, float) and not math.isfinite(value):
             raise DocumentError("non-finite numbers are not allowed")
         if isinstance(value, dict):
-            pending.extend((item, depth + 1) for item in value.values())
+            for key, item in value.items():
+                if not isinstance(key, str):
+                    raise DocumentError("mapping keys must be strings")
+                pending.append((key, depth + 1))
+                pending.append((item, depth + 1))
         elif isinstance(value, list):
             pending.extend((item, depth + 1) for item in value)
     return document

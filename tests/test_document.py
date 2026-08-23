@@ -36,6 +36,26 @@ def test_non_finite_yaml_number_is_rejected() -> None:
         load_document(b"value: .inf\n")
 
 
+@pytest.mark.parametrize(
+    "content",
+    [
+        b"outer:\n  .inf: value\n",
+        b"outer:\n  1: value\n",
+        b"outer:\n  true: value\n",
+        b"outer:\n  null: value\n",
+    ],
+)
+def test_non_json_yaml_mapping_keys_are_rejected(content: bytes) -> None:
+    with pytest.raises(DocumentError):
+        load_document(content)
+
+
+def test_yaml_timestamp_scalars_remain_strings() -> None:
+    assert load_document(b"value: 2026-01-01 00:00:00+00:00\n") == {
+        "value": "2026-01-01 00:00:00+00:00"
+    }
+
+
 def test_oversized_json_integer_is_rejected() -> None:
     with pytest.raises(DocumentError):
         load_document(b'{"value": ' + b"9" * 5_000 + b"}", format_hint="json")

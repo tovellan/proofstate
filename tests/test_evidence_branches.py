@@ -99,6 +99,8 @@ def test_oversized_json_pointer_index_is_missing() -> None:
         ({"key": 1}, ArtifactOperator.CONTAINS, [], False),
         ({1: "value"}, ArtifactOperator.CONTAINS, True, False),
         ([1], ArtifactOperator.CONTAINS, True, False),
+        ([{"flag": 1}], ArtifactOperator.CONTAINS, {"flag": True}, False),
+        ([[1]], ArtifactOperator.CONTAINS, [True], False),
         ("ready", ArtifactOperator.CONTAINS, "ead", True),
         ("ready", ArtifactOperator.CONTAINS, 1, False),
         (7, ArtifactOperator.CONTAINS, 7, False),
@@ -179,6 +181,56 @@ def test_invalid_artifact_and_digest_are_rejected() -> None:
     assert mismatch.code == EvidenceCode.DIGEST_MISMATCH
 
 
+@pytest.mark.parametrize(
+    "content",
+    [
+        b"outer:\n  .inf: value\n",
+        b"outer:\n  1: value\n",
+        b"outer:\n  value: .inf\n",
+    ],
+)
+def test_invalid_yaml_mapping_members_fail_artifact_closed(content: bytes) -> None:
+    evidence = ArtifactEvidence.model_validate(
+        {
+            "type": "artifact",
+            "path": "report.yaml",
+            "format": "yaml",
+            "checks": [{"pointer": "", "operator": "exists"}],
+        }
+    )
+
+    result = verify_artifact(evidence, repository_with(content), "a" * 40, 1_000)
+
+    assert result.code == EvidenceCode.ARTIFACT_INVALID
+
+
+def test_nested_contains_uses_type_exact_composite_equality() -> None:
+    evidence = ArtifactEvidence.model_validate(
+        {
+            "type": "artifact",
+            "path": "report.json",
+            "format": "json",
+            "checks": [
+                {
+                    "pointer": "/results",
+                    "operator": "contains",
+                    "expected": {"passed": True},
+                }
+            ],
+        }
+    )
+
+    result = verify_artifact(
+        evidence,
+        repository_with(b'{"results":[{"passed":1}]}'),
+        "a" * 40,
+        1_000,
+    )
+
+    assert result.code == EvidenceCode.ARTIFACT_CHECK_FAILED
+    assert result.details == {"failed_check_indexes": [0]}
+
+
 def test_attestation_invalid_future_digest_and_missing() -> None:
     evidence = AttestationEvidence(type="human_attestation", path="review.json")
     invalid = verify_attestation(
@@ -234,6 +286,35 @@ def test_attestation_invalid_future_digest_and_missing() -> None:
     assert future.code == EvidenceCode.ATTESTATION_NOT_YET_VALID
     assert mismatch.code == EvidenceCode.DIGEST_MISMATCH
     assert missing.code == EvidenceCode.FILE_MISSING
+
+
+def test_yaml_space_separated_attestation_timestamp_fails_closed() -> None:
+    evidence = AttestationEvidence(type="human_attestation", path="review.yaml")
+    document = b"""\
+schema_version: proofstate.dev/attestation/v1alpha1
+identity: reviewer@example.invalid
+issued_at: 2025-01-01 00:00:00+00:00
+expires_at: 2027-01-01T00:00:00Z
+scope:
+  repository: example.invalid/repository
+  commit: aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+  assertions:
+    - review
+statement: Reviewed.
+"""
+
+    result = verify_attestation(
+        evidence,
+        repository_with(document),
+        "b" * 40,
+        "a" * 40,
+        "example.invalid/repository",
+        "review",
+        datetime(2026, 1, 1, tzinfo=UTC),
+        1_000,
+    )
+
+    assert result.code == EvidenceCode.ATTESTATION_INVALID
 
 
 def test_git_failure_in_machine_evidence_fails_closed() -> None:
