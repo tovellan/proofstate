@@ -25,6 +25,7 @@ uv run ruff check .
 uv run mypy src/proofstate tests
 uv run pytest --cov=proofstate --cov-report=term-missing
 uv build --out-dir "$gate_tmp/dist"
+python3 scripts/check_distribution.py "$gate_tmp/dist"
 python3 scripts/verify_release.py --dist "$gate_tmp/dist"
 
 uv export --quiet \

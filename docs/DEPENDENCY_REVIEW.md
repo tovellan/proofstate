@@ -8,7 +8,10 @@ Runtime dependencies are intentionally small.
 | PyYAML | Safe YAML scanning and parsing | MIT | Compatible with Apache-2.0 |
 
 The build backend is Hatchling under MIT. Development tools are not distributed
-as runtime dependencies. The lockfile records resolved transitive versions.
+as runtime dependencies. The lockfile records resolved transitive versions. The
+source archive contains only package source, build metadata, the license, the
+README, and the repository's build-ignore rules. CI checks both archive file
+lists before installation or release.
 
 No dependency requires attribution through a project `NOTICE` file, so version
 0.1.0 does not include one. This review should be repeated when runtime or build

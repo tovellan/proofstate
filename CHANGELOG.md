@@ -5,6 +5,11 @@ versions follow Semantic Versioning.
 
 ## [Unreleased]
 
+### Changed
+
+- Limited distribution archives to reviewed package files and added the PEP 561
+  marker for downstream type checkers.
+
 ## [0.3.2] - 2026-08-24
 
 ### Security
