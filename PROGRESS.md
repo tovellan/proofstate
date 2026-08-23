@@ -7,3 +7,5 @@
   CLI, and machine-readable results.
 - 2026-08-24: Added adversarial, property, integration, and performance coverage.
 - 2026-08-24: Added public documentation, project policy, and repository automation.
+- 2026-08-24: Published the public repository and 0.1.0 release after local and
+  hosted validation.

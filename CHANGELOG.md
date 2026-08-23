@@ -5,7 +5,10 @@ versions follow Semantic Versioning.
 
 ## [Unreleased]
 
-No changes yet.
+### Changed
+
+- Pinned GitHub Actions to current Node 24 releases and isolated cache writers
+  across concurrent CI jobs.
 
 ## [0.1.0] - 2026-08-24
 
