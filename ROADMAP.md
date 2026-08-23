@@ -5,7 +5,7 @@ The roadmap records direction, not commitments or delivery dates.
 ## Near term
 
 - Gather feedback on the `v1alpha1` schema and error taxonomy.
-- Add conformance fixtures for independent implementations.
+- Extend the installed document conformance bundle with Git evaluation fixtures.
 - Measure evaluation on larger histories and scorecards.
 - Define a plugin boundary for additional bounded machine evidence types.
 
@@ -16,7 +16,7 @@ The roadmap records direction, not commitments or delivery dates.
 - Evaluate portable named-test discovery for languages beyond Python.
 - Add an explicit policy for shallow clones and partial object availability.
 
-## Not planned for 0.1.x
+## Not planned for alpha releases
 
 - Running test suites or arbitrary commands.
 - Fetching evidence from network services.

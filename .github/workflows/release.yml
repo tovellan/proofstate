@@ -47,12 +47,20 @@ jobs:
           python3 scripts/check_repository.py
       - name: Build distributions
         run: uv build
+      - name: Verify installed conformance bundle
+        run: |
+          uv venv --python 3.11 release-env
+          uv pip install --python release-env/bin/python dist/proofstate-*.whl
+          release-env/bin/proofstate conformance
       - name: Create release without publishing packages
         env:
           GH_TOKEN: ${{ github.token }}
           RELEASE_TAG: ${{ inputs.tag }}
-        run: >-
-          gh release create "$RELEASE_TAG" dist/*
-          --verify-tag
-          --title "ProofState ${RELEASE_TAG#v}"
-          --notes-file docs/release-notes/0.1.0.md
+        run: |
+          version="${RELEASE_TAG#v}"
+          notes="docs/release-notes/${version}.md"
+          test -f "$notes"
+          gh release create "$RELEASE_TAG" dist/* \
+            --verify-tag \
+            --title "ProofState $version" \
+            --notes-file "$notes"
