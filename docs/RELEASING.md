@@ -26,7 +26,9 @@ gh release verify vX.Y.Z --repo tovellan/proofstate
 gh release verify-asset vX.Y.Z ./proofstate-X.Y.Z-py3-none-any.whl \
   --repo tovellan/proofstate
 gh attestation verify ./proofstate-X.Y.Z-py3-none-any.whl \
-  --repo tovellan/proofstate
+  --repo tovellan/proofstate \
+  --signer-workflow tovellan/proofstate/.github/workflows/release.yml \
+  --source-ref refs/heads/main
 ```
 
 The release workflow does not publish to PyPI, a container registry, or another

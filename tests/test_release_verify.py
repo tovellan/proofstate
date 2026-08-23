@@ -82,11 +82,13 @@ def test_release_workflow_binds_and_attests_exact_artifacts() -> None:
     attestation = steps[names.index("Attest release distributions")]
     release = steps[names.index("Create release without publishing packages")]["run"]
 
+    assert checkout["uses"] == ("actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1")
     assert checkout["with"] == {
         "ref": "${{ inputs.tag }}",
         "fetch-depth": 0,
         "persist-credentials": False,
     }
+    assert names.index("Check out the requested tag") < names.index("Validate release identity")
     assert names.index("Validate release identity") < names.index("Install uv and Python")
     assert names.index("Verify both installed distributions") < names.index(
         "Attest release distributions"
@@ -104,7 +106,10 @@ def test_release_workflow_binds_and_attests_exact_artifacts() -> None:
         "'+refs/heads/main:refs/remotes/origin/main'\n"
         'git merge-base --is-ancestor "$GITHUB_SHA" refs/remotes/origin/main\n'
     )
-    assert 'python3 scripts/verify_release.py --tag "$RELEASE_TAG"' in source_validation
+    assert source_validation.splitlines()[0] == (
+        'python3 scripts/verify_release.py --tag "$RELEASE_TAG"'
+    )
+    assert "|| true" not in source_validation
     assert attestation["uses"] == ("actions/attest@1e69f48acb82d1966a394da916b4c1698aa569d6")
     assert attestation["with"] == {
         "subject-path": (
@@ -115,6 +120,10 @@ def test_release_workflow_binds_and_attests_exact_artifacts() -> None:
     }
     assert 'wheel="dist/proofstate-${version}-py3-none-any.whl"' in release
     assert 'sdist="dist/proofstate-${version}.tar.gz"' in release
-    assert 'gh release create "$RELEASE_TAG" "$wheel" "$sdist"' in release
+    release_commands = [
+        line.strip() for line in release.splitlines() if line.strip().startswith("gh release ")
+    ]
+    assert release_commands == ['gh release create "$RELEASE_TAG" "$wheel" "$sdist" \\']
     assert "--verify-tag" in release
     assert "dist/*" not in release
+    assert "|| true" not in release
