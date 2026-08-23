@@ -85,6 +85,9 @@ Pointers follow RFC 6901. Supported operators are:
 | `lte` | Numeric value is at most `expected`; booleans are rejected. |
 | `type` | Value has JSON type `null`, `boolean`, `number`, `string`, `array`, or `object`. |
 
+List membership uses recursive type-exact comparison. Nested booleans and
+numbers do not compare as the same value.
+
 Artifacts can be JSON or the restricted YAML subset described in the
 architecture document.
 

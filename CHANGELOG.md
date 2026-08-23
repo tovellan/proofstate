@@ -20,6 +20,11 @@ versions follow Semantic Versioning.
   and public release gates.
 - Required release tags to identify commits already present on `main`.
 
+### Fixed
+
+- Preserved YAML timestamp text for RFC 3339 validation, rejected non-string
+  mapping keys, and applied recursive type-exact structured comparisons.
+
 ## [0.3.4] - 2026-08-24
 
 ### Security

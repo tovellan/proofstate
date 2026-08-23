@@ -235,24 +235,45 @@ def _json_type(value: Any) -> str:
     return "unsupported"
 
 
+def _json_values_equal(left: Any, right: Any) -> bool:
+    if type(left) is not type(right):
+        return False
+    if isinstance(left, list):
+        return len(left) == len(right) and all(
+            _json_values_equal(left_item, right_item)
+            for left_item, right_item in zip(left, right, strict=True)
+        )
+    if isinstance(left, dict):
+        if len(left) != len(right):
+            return False
+        unmatched = list(right.items())
+        for left_key, left_value in left.items():
+            for index, (right_key, right_value) in enumerate(unmatched):
+                if type(left_key) is type(right_key) and left_key == right_key:
+                    if not _json_values_equal(left_value, right_value):
+                        return False
+                    unmatched.pop(index)
+                    break
+            else:
+                return False
+        return True
+    return bool(left == right)
+
+
 def _artifact_check_passes(value: Any, check: ArtifactCheck) -> bool:
     if check.operator == ArtifactOperator.EXISTS:
         return value is not _MISSING
     if value is _MISSING:
         return False
     if check.operator == ArtifactOperator.EQUALS:
-        return value == check.expected and type(value) is type(check.expected)
+        return _json_values_equal(value, check.expected)
     if check.operator == ArtifactOperator.NOT_EQUALS:
-        return value != check.expected or type(value) is not type(check.expected)
+        return not _json_values_equal(value, check.expected)
     if check.operator == ArtifactOperator.CONTAINS:
         if isinstance(value, dict):
-            return any(
-                type(item) is type(check.expected) and item == check.expected for item in value
-            )
+            return any(_json_values_equal(item, check.expected) for item in value)
         if isinstance(value, list):
-            return any(
-                type(item) is type(check.expected) and item == check.expected for item in value
-            )
+            return any(_json_values_equal(item, check.expected) for item in value)
         if isinstance(value, str):
             return isinstance(check.expected, str) and check.expected in value
         return False

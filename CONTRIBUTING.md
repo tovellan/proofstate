@@ -31,9 +31,10 @@ Tests must cover the successful path and at least one failure path. Changes to
 the public Python API, CLI, result JSON, scorecard schema, or attestation schema
 need matching reference documentation and a changelog entry.
 
-Commits should be small and explain why the change is needed. Do not add
-authorship trailers or tool attribution. By contributing, you agree that your
-work is licensed under Apache License 2.0.
+Commits should be small and explain why the change is needed. Use the
+repository's configured project identity and do not add coauthor, sign-off,
+generator, or other extra authorship trailers. By contributing, you agree that
+your work is licensed under Apache License 2.0.
 
 ## Review criteria
 
