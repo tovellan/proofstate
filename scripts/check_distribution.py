@@ -30,8 +30,8 @@ def _source_files(root: Path) -> set[str]:
     package = root / "src" / "proofstate"
     return {
         path.relative_to(root).as_posix()
-        for path in package.iterdir()
-        if path.suffix == ".py" or path.name == "py.typed"
+        for path in package.rglob("*")
+        if path.is_file() and (path.suffix in {".json", ".py"} or path.name == "py.typed")
     }
 
 
