@@ -5,6 +5,12 @@ versions follow Semantic Versioning.
 
 ## [Unreleased]
 
+## [0.3.1] - 2026-08-24
+
+### Changed
+
+- Updated the reviewed development type-checking range and lock to mypy 2.x.
+
 ## [0.3.0] - 2026-08-24
 
 ### Added
@@ -46,7 +52,8 @@ versions follow Semantic Versioning.
 - Adversarial, property-based, integration, and bounded performance tests.
 - Hardened CI, CodeQL, secret scanning, dependency updates, and release workflow.
 
-[Unreleased]: https://github.com/tovellan/proofstate/compare/v0.3.0...HEAD
+[Unreleased]: https://github.com/tovellan/proofstate/compare/v0.3.1...HEAD
+[0.3.1]: https://github.com/tovellan/proofstate/compare/v0.3.0...v0.3.1
 [0.3.0]: https://github.com/tovellan/proofstate/compare/v0.2.1...v0.3.0
 [0.2.1]: https://github.com/tovellan/proofstate/compare/v0.2.0...v0.2.1
 [0.2.0]: https://github.com/tovellan/proofstate/compare/v0.1.0...v0.2.0
