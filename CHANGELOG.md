@@ -5,6 +5,14 @@ versions follow Semantic Versioning.
 
 ## [Unreleased]
 
+## [0.2.1] - 2026-08-24
+
+### Changed
+
+- Required annotated release tags to identify the exact checked-out commit.
+- Verified matching source, notes, wheel, and source archive versions before release.
+- Isolated local release builds from stale artifacts in the working directory.
+
 ## [0.2.0] - 2026-08-24
 
 ### Added
@@ -31,6 +39,7 @@ versions follow Semantic Versioning.
 - Adversarial, property-based, integration, and bounded performance tests.
 - Hardened CI, CodeQL, secret scanning, dependency updates, and release workflow.
 
-[Unreleased]: https://github.com/tovellan/proofstate/compare/v0.2.0...HEAD
+[Unreleased]: https://github.com/tovellan/proofstate/compare/v0.2.1...HEAD
+[0.2.1]: https://github.com/tovellan/proofstate/compare/v0.2.0...v0.2.1
 [0.2.0]: https://github.com/tovellan/proofstate/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/tovellan/proofstate/releases/tag/v0.1.0
