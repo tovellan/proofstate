@@ -11,6 +11,7 @@ test:
 
 build:
 	uv build
+	python3 scripts/check_distribution.py dist
 
 audit:
 	uv export --quiet --frozen --no-dev --no-emit-project --format requirements-txt | uv run pip-audit --requirement - --disable-pip --require-hashes

@@ -9,6 +9,8 @@ versions follow Semantic Versioning.
 
 - Pinned GitHub Actions to current Node 24 releases and isolated cache writers
   across concurrent CI jobs.
+- Limited distribution archives to reviewed package files and added the PEP 561
+  marker for downstream type checkers.
 
 ## [0.1.0] - 2026-08-24
 

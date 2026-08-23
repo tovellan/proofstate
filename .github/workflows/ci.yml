@@ -60,7 +60,7 @@ jobs:
           python-version: "3.11"
           enable-cache: false
       - name: Build distributions
-        run: uv build
+        run: make build
       - name: Install wheel in a clean environment
         run: |
           uv venv --python 3.11 clean-env

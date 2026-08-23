@@ -51,6 +51,14 @@ dev = [
 [tool.hatch.build.targets.wheel]
 packages = ["src/proofstate"]
 
+[tool.hatch.build.targets.sdist]
+include = [
+  "/LICENSE",
+  "/README.md",
+  "/pyproject.toml",
+  "/src/proofstate",
+]
+
 [tool.pytest.ini_options]
 addopts = "--strict-config --strict-markers -ra"
 testpaths = ["tests"]

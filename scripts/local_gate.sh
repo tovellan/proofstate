@@ -24,7 +24,7 @@ uv run ruff format --check .
 uv run ruff check .
 uv run mypy src/proofstate tests
 uv run pytest --cov=proofstate --cov-report=term-missing
-uv build
+make build
 
 uv export --quiet \
   --frozen \
