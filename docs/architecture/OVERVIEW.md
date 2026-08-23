@@ -26,8 +26,9 @@ and tree IDs for each.
 
 1. Discover the Git worktree from `--repo`.
 2. Resolve `--scorecard-ref` and read the scorecard blob from that commit.
-3. Parse bounded UTF-8 YAML or JSON with duplicate keys, aliases, anchors, and
-   explicit YAML tags rejected.
+3. Parse bounded UTF-8 YAML or JSON with duplicate keys, non-finite numbers,
+   nonstandard JSON constants, aliases, anchors, and explicit YAML tags
+   rejected.
 4. Validate the closed schema and dependency graph.
 5. Resolve the full evidence commit and prove it is an ancestor of the scorecard
    commit.
@@ -55,4 +56,5 @@ evaluation is topological.
 - Each assertion supports at most 100 dependencies and 100 items per evidence
   category.
 - Structured artifacts support at most 100 checks.
+- Structured documents are limited to 100 nesting levels.
 - Git subprocesses have a 30-second timeout.

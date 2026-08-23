@@ -51,17 +51,45 @@ def test_invalid_json_pointers_are_rejected(pointer: str) -> None:
         ArtifactCheck(pointer=pointer, operator=ArtifactOperator.EXISTS)
 
 
-def test_test_symbol_requires_pytest_name() -> None:
+@pytest.mark.parametrize(
+    "symbol",
+    ["helper", "Helper.test_hidden", "TestRelease.helper", "TestRelease.test_ok.nested"],
+)
+def test_test_symbol_requires_collectable_pytest_name(symbol: str) -> None:
     with pytest.raises(ValidationError):
         SymbolEvidence(
             type="test_symbol",
             path="tests/check.py",
-            symbol="helper",
+            symbol=symbol,
             framework="pytest",
         )
 
 
-@pytest.mark.parametrize("path", ["", "\\bad", "bad\x00path", "/absolute", ".git/config"])
+@pytest.mark.parametrize("symbol", ["test_release", "TestRelease.test_candidate"])
+def test_collectable_pytest_names_are_accepted(symbol: str) -> None:
+    evidence = SymbolEvidence(
+        type="test_symbol",
+        path="tests/check.py",
+        symbol=symbol,
+        framework="pytest",
+    )
+    assert evidence.symbol == symbol
+
+
+@pytest.mark.parametrize(
+    "path",
+    [
+        "",
+        "\\bad",
+        "bad\x00path",
+        "/absolute",
+        ".git/config",
+        "./file",
+        "a/./b",
+        "a//b",
+        "a/",
+    ],
+)
 def test_additional_unsafe_paths_are_rejected(path: str) -> None:
     with pytest.raises(ValueError):
         validate_repository_path(path)
@@ -126,6 +154,10 @@ def test_timestamp_and_attestation_validators() -> None:
         parse_timestamp(123)
     with pytest.raises(ValueError):
         parse_timestamp("2026-01-01T00:00:00")
+    with pytest.raises(ValueError):
+        parse_timestamp("2026-01-01 00:00:00+00:00")
+    with pytest.raises(ValueError):
+        parse_timestamp("2026-W01-4T00:00:00+00:00")
     with pytest.raises(ValidationError):
         AttestationScope(
             repository="example.invalid/repo",

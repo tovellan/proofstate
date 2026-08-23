@@ -85,6 +85,10 @@ def test_json_pointer_resolution(document: Any, pointer: str, expected: Any) -> 
         assert resolved == expected
 
 
+def test_oversized_json_pointer_index_is_missing() -> None:
+    assert type(_resolve_pointer([], "/" + "9" * 5_000)) is object
+
+
 @pytest.mark.parametrize(
     ("value", "operator", "expected", "passed"),
     [
@@ -92,7 +96,11 @@ def test_json_pointer_resolution(document: Any, pointer: str, expected: Any) -> 
         (True, ArtifactOperator.EQUALS, 1, False),
         (1, ArtifactOperator.NOT_EQUALS, 2, True),
         ({"key": 1}, ArtifactOperator.CONTAINS, "key", True),
+        ({"key": 1}, ArtifactOperator.CONTAINS, [], False),
+        ({1: "value"}, ArtifactOperator.CONTAINS, True, False),
+        ([1], ArtifactOperator.CONTAINS, True, False),
         ("ready", ArtifactOperator.CONTAINS, "ead", True),
+        ("ready", ArtifactOperator.CONTAINS, 1, False),
         (7, ArtifactOperator.CONTAINS, 7, False),
         (7, ArtifactOperator.GREATER_THAN_OR_EQUAL, 7, True),
         (7, ArtifactOperator.LESS_THAN_OR_EQUAL, 8, True),
