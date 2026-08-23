@@ -4,11 +4,13 @@ from __future__ import annotations
 
 import json
 from collections.abc import Hashable
-from typing import Any
+from typing import Any, NoReturn
 
 import yaml
 from yaml.nodes import MappingNode
 from yaml.tokens import AliasToken, AnchorToken, TagToken
+
+MAX_DOCUMENT_DEPTH = 100
 
 
 class DocumentError(ValueError):
@@ -51,6 +53,23 @@ def _unique_json_object(pairs: list[tuple[str, Any]]) -> dict[str, Any]:
     return result
 
 
+def _reject_json_constant(value: str) -> NoReturn:
+    raise DocumentError(f"invalid JSON constant: {value}")
+
+
+def _check_document_depth(document: Any) -> Any:
+    pending: list[tuple[Any, int]] = [(document, 0)]
+    while pending:
+        value, depth = pending.pop()
+        if depth > MAX_DOCUMENT_DEPTH:
+            raise DocumentError(f"document nesting exceeds {MAX_DOCUMENT_DEPTH} levels")
+        if isinstance(value, dict):
+            pending.extend((item, depth + 1) for item in value.values())
+        elif isinstance(value, list):
+            pending.extend((item, depth + 1) for item in value)
+    return document
+
+
 def load_document(content: bytes, *, format_hint: str | None = None) -> Any:
     try:
         text = content.decode("utf-8")
@@ -59,8 +78,14 @@ def load_document(content: bytes, *, format_hint: str | None = None) -> Any:
 
     if format_hint == "json":
         try:
-            return json.loads(text, object_pairs_hook=_unique_json_object)
-        except (json.JSONDecodeError, DocumentError) as error:
+            return _check_document_depth(
+                json.loads(
+                    text,
+                    object_pairs_hook=_unique_json_object,
+                    parse_constant=_reject_json_constant,
+                )
+            )
+        except (json.JSONDecodeError, DocumentError, RecursionError) as error:
             raise DocumentError(str(error)) from error
 
     try:
@@ -68,6 +93,6 @@ def load_document(content: bytes, *, format_hint: str | None = None) -> Any:
             if isinstance(token, (AliasToken, AnchorToken, TagToken)):
                 raise DocumentError("YAML aliases, anchors, and explicit tags are not allowed")
         # UniqueKeyLoader derives from SafeLoader and cannot construct Python objects.
-        return yaml.load(text, Loader=UniqueKeyLoader)  # noqa: S506
-    except (yaml.YAMLError, DocumentError) as error:
+        return _check_document_depth(yaml.load(text, Loader=UniqueKeyLoader))  # noqa: S506
+    except (yaml.YAMLError, DocumentError, RecursionError) as error:
         raise DocumentError(str(error)) from error

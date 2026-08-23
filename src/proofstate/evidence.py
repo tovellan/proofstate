@@ -207,7 +207,10 @@ def _resolve_pointer(document: Any, pointer: str) -> Any:
         elif isinstance(current, list):
             if not token.isdigit():
                 return _MISSING
-            index = int(token)
+            try:
+                index = int(token)
+            except ValueError:
+                return _MISSING
             if index >= len(current):
                 return _MISSING
             current = current[index]
@@ -243,9 +246,14 @@ def _artifact_check_passes(value: Any, check: ArtifactCheck) -> bool:
         return value != check.expected or type(value) is not type(check.expected)
     if check.operator == ArtifactOperator.CONTAINS:
         if isinstance(value, dict):
+            try:
+                return check.expected in value
+            except TypeError:
+                return False
+        if isinstance(value, list):
             return check.expected in value
-        if isinstance(value, (list, str)):
-            return check.expected in value
+        if isinstance(value, str):
+            return isinstance(check.expected, str) and check.expected in value
         return False
     if check.operator in {
         ArtifactOperator.GREATER_THAN_OR_EQUAL,
