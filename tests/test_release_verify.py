@@ -76,9 +76,17 @@ def test_release_workflow_binds_and_attests_exact_artifacts() -> None:
     }
     steps = job["steps"]
     names = [step["name"] for step in steps]
+    checkout = steps[names.index("Check out the requested tag")]
     identity = steps[names.index("Validate release identity")]["run"]
+    source_validation = steps[names.index("Validate source and tests")]["run"]
     attestation = steps[names.index("Attest release distributions")]
+    release = steps[names.index("Create release without publishing packages")]["run"]
 
+    assert checkout["with"] == {
+        "ref": "${{ inputs.tag }}",
+        "fetch-depth": 0,
+        "persist-credentials": False,
+    }
     assert names.index("Validate release identity") < names.index("Install uv and Python")
     assert names.index("Verify both installed distributions") < names.index(
         "Attest release distributions"
@@ -86,9 +94,17 @@ def test_release_workflow_binds_and_attests_exact_artifacts() -> None:
     assert names.index("Attest release distributions") < names.index(
         "Create release without publishing packages"
     )
-    assert 'test "$GITHUB_REF" = "refs/heads/main"' in identity
-    assert 'test "$(git rev-parse "$tag_ref^{commit}")" = "$GITHUB_SHA"' in identity
-    assert 'test "$(git rev-parse HEAD)" = "$GITHUB_SHA"' in identity
+    assert identity == (
+        'test "$GITHUB_REF" = "refs/heads/main"\n'
+        'tag_ref="refs/tags/$RELEASE_TAG"\n'
+        'test "$(git cat-file -t "$tag_ref")" = "tag"\n'
+        'test "$(git rev-parse "$tag_ref^{commit}")" = "$GITHUB_SHA"\n'
+        'test "$(git rev-parse HEAD)" = "$GITHUB_SHA"\n'
+        "git fetch --force --no-tags origin "
+        "'+refs/heads/main:refs/remotes/origin/main'\n"
+        'git merge-base --is-ancestor "$GITHUB_SHA" refs/remotes/origin/main\n'
+    )
+    assert 'python3 scripts/verify_release.py --tag "$RELEASE_TAG"' in source_validation
     assert attestation["uses"] == ("actions/attest@1e69f48acb82d1966a394da916b4c1698aa569d6")
     assert attestation["with"] == {
         "subject-path": (
@@ -97,3 +113,8 @@ def test_release_workflow_binds_and_attests_exact_artifacts() -> None:
         ),
         "push-to-registry": False,
     }
+    assert 'wheel="dist/proofstate-${version}-py3-none-any.whl"' in release
+    assert 'sdist="dist/proofstate-${version}.tar.gz"' in release
+    assert 'gh release create "$RELEASE_TAG" "$wheel" "$sdist"' in release
+    assert "--verify-tag" in release
+    assert "dist/*" not in release

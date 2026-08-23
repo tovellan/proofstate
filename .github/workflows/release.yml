@@ -88,8 +88,12 @@ jobs:
         run: |
           version="${RELEASE_TAG#v}"
           notes="docs/release-notes/${version}.md"
+          wheel="dist/proofstate-${version}-py3-none-any.whl"
+          sdist="dist/proofstate-${version}.tar.gz"
           test -f "$notes"
-          gh release create "$RELEASE_TAG" dist/* \
+          test -f "$wheel"
+          test -f "$sdist"
+          gh release create "$RELEASE_TAG" "$wheel" "$sdist" \
             --verify-tag \
             --title "ProofState $version" \
             --notes-file "$notes"
