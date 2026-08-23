@@ -1,0 +1,54 @@
+schema_version: proofstate.dev/scorecard/v1alpha1
+repository:
+  identity: github.com/tovellan/proofstate
+  commit: e641516a5bb2b8cb532192744d57e38bf3237916
+settings:
+  max_evidence_bytes: 1048576
+assertions:
+  - id: security-policy
+    title: Security policy and threat model are present
+    severity: critical
+    failure_cap: none
+    depends_on: []
+    evidence:
+      machine:
+        - type: file
+          path: SECURITY.md
+        - type: file
+          path: docs/security/THREAT_MODEL.md
+      attestations: []
+  - id: fail-closed-tests
+    title: Fail-closed integration behavior has a named test
+    severity: critical
+    failure_cap: none
+    depends_on:
+      - security-policy
+    evidence:
+      machine:
+        - type: test_symbol
+          framework: pytest
+          path: tests/test_evaluate.py
+          symbol: test_missing_machine_evidence_blocks_dependents
+      attestations: []
+  - id: executable-example
+    title: A complete synthetic example is present
+    severity: high
+    failure_cap: advisory
+    depends_on:
+      - fail-closed-tests
+    evidence:
+      machine:
+        - type: file
+          path: examples/basic/run.py
+      attestations: []
+  - id: clean-room-review
+    title: Clean-room and release boundary review is current
+    severity: high
+    failure_cap: merge
+    depends_on:
+      - executable-example
+    evidence:
+      machine: []
+      attestations:
+        - type: human_attestation
+          path: .proofstate/attestations/initial-review.json

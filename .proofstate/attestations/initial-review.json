@@ -1,0 +1,14 @@
+{
+  "expires_at": "2027-08-24T00:00:00+05:30",
+  "identity": "initial-maintainer@example.invalid",
+  "issued_at": "2026-08-24T00:00:00+05:30",
+  "schema_version": "proofstate.dev/attestation/v1alpha1",
+  "scope": {
+    "assertions": [
+      "clean-room-review"
+    ],
+    "commit": "e641516a5bb2b8cb532192744d57e38bf3237916",
+    "repository": "github.com/tovellan/proofstate"
+  },
+  "statement": "The clean-room record, threat model, and public release boundary were reviewed for the named commit."
+}
