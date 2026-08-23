@@ -30,7 +30,7 @@ ProofState requires Python 3.11 or later and Git.
 Install the released source with `uv`:
 
 ```sh
-uv tool install git+https://github.com/tovellan/proofstate@v0.1.0
+uv tool install git+https://github.com/tovellan/proofstate@v0.3.0
 proofstate --version
 ```
 
@@ -43,7 +43,7 @@ uv sync --locked --all-groups
 uv run proofstate --version
 ```
 
-No package is published to PyPI in version 0.1.0.
+No package is published to PyPI in version 0.3.0.
 
 ## Run the complete example
 
@@ -80,6 +80,36 @@ proofstate check .proofstate/scorecard.yaml --format json > proofstate-result.js
 Exit status `0` means the requested gate is achieved. Status `1` means the
 scorecard evaluated but did not achieve the gate. Status `2` means the input or
 repository could not be evaluated.
+
+## Verify portable conformance fixtures
+
+The wheel includes a digest-pinned fixture corpus for independent `v1alpha1`
+implementations. Verify the installed copy and print machine-readable outcomes:
+
+```sh
+proofstate conformance --format json
+```
+
+Export the exact verified files into a new directory:
+
+```sh
+proofstate conformance --export ./proofstate-conformance-v1alpha1
+```
+
+Export refuses an existing destination, never overwrites files, and fails before
+creating output if the installed manifest or any fixture does not verify.
+
+The corpus covers valid scorecards and attestations plus strict unknown-field,
+duplicate-key, dependency-cycle, path, scope, and validity-window
+failures. Each case declares its expected classification in the installed
+manifest. The command returns status `1` if a fixture digest or outcome differs.
+
+Export either versioned document schema:
+
+```sh
+proofstate schema scorecard
+proofstate schema attestation
+```
 
 ## Scorecard shape
 
@@ -136,7 +166,7 @@ A human attestation is a scoped declaration, not a cryptographic identity proof.
 ProofState protects its content from uncommitted mutation by loading it from the
 scorecard Git tree, and checks its time and scope. Teams that need signer
 authentication should require signed commits or add a signature-verification
-step before ProofState. Version 0.1.0 does not fetch remote evidence, execute
+step before ProofState. Version 0.3.0 does not fetch remote evidence, execute
 tests, validate commit signatures, or establish that an attested identity maps
 to a real person.
 
@@ -160,7 +190,7 @@ full-history secret scan when `gitleaks` is installed.
 
 ## Status
 
-ProofState 0.1.0 supports local Git worktrees and SHA-1 or SHA-256 Git object
+ProofState 0.3.0 supports local Git worktrees and SHA-1 or SHA-256 Git object
 formats. The schema is `v1alpha1`: unknown fields fail validation, but compatible
 additive evolution is not promised until a stable schema is released.
 

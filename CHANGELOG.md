@@ -5,10 +5,34 @@ versions follow Semantic Versioning.
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-08-24
+
+### Added
+
+- Safe export of the exact installed `v1alpha1` conformance corpus.
+- Stable fail-closed errors for existing or unavailable export destinations.
+
+## [0.2.1] - 2026-08-24
+
+### Changed
+
+- Required annotated release tags to identify the exact checked-out commit.
+- Verified matching source, notes, wheel, and source archive versions before release.
+- Isolated local release builds from stale artifacts in the working directory.
+
+## [0.2.0] - 2026-08-24
+
+### Added
+
+- Installed, digest-pinned `v1alpha1` scorecard and attestation conformance fixtures.
+- Text and JSON conformance verification with per-case expected outcomes.
+- Attestation JSON Schema export through the existing schema command.
+
 ### Changed
 
 - Pinned GitHub Actions to current Node 24 releases and isolated cache writers
   across concurrent CI jobs.
+- Verified the installed conformance bundle during clean-wheel and release checks.
 
 ## [0.1.0] - 2026-08-24
 
@@ -22,5 +46,8 @@ versions follow Semantic Versioning.
 - Adversarial, property-based, integration, and bounded performance tests.
 - Hardened CI, CodeQL, secret scanning, dependency updates, and release workflow.
 
-[Unreleased]: https://github.com/tovellan/proofstate/compare/v0.1.0...HEAD
+[Unreleased]: https://github.com/tovellan/proofstate/compare/v0.3.0...HEAD
+[0.3.0]: https://github.com/tovellan/proofstate/compare/v0.2.1...v0.3.0
+[0.2.1]: https://github.com/tovellan/proofstate/compare/v0.2.0...v0.2.1
+[0.2.0]: https://github.com/tovellan/proofstate/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/tovellan/proofstate/releases/tag/v0.1.0
