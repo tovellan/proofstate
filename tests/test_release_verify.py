@@ -82,6 +82,17 @@ def test_release_workflow_binds_and_attests_exact_artifacts() -> None:
     attestation = steps[names.index("Attest release distributions")]
     release = steps[names.index("Create release without publishing packages")]["run"]
 
+    for critical_name in {
+        "Check out the requested tag",
+        "Validate release identity",
+        "Validate source and tests",
+        "Attest release distributions",
+        "Create release without publishing packages",
+    }:
+        critical_step = steps[names.index(critical_name)]
+        assert "continue-on-error" not in critical_step
+        assert "shell" not in critical_step
+
     assert checkout["uses"] == ("actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1")
     assert checkout["with"] == {
         "ref": "${{ inputs.tag }}",
@@ -118,12 +129,16 @@ def test_release_workflow_binds_and_attests_exact_artifacts() -> None:
         ),
         "push-to-registry": False,
     }
-    assert 'wheel="dist/proofstate-${version}-py3-none-any.whl"' in release
-    assert 'sdist="dist/proofstate-${version}.tar.gz"' in release
-    release_commands = [
-        line.strip() for line in release.splitlines() if line.strip().startswith("gh release ")
-    ]
-    assert release_commands == ['gh release create "$RELEASE_TAG" "$wheel" "$sdist" \\']
-    assert "--verify-tag" in release
-    assert "dist/*" not in release
-    assert "|| true" not in release
+    assert release == (
+        'version="${RELEASE_TAG#v}"\n'
+        'notes="docs/release-notes/${version}.md"\n'
+        'wheel="dist/proofstate-${version}-py3-none-any.whl"\n'
+        'sdist="dist/proofstate-${version}.tar.gz"\n'
+        'test -f "$notes"\n'
+        'test -f "$wheel"\n'
+        'test -f "$sdist"\n'
+        'gh release create "$RELEASE_TAG" "$wheel" "$sdist" \\\n'
+        "  --verify-tag \\\n"
+        '  --title "ProofState $version" \\\n'
+        '  --notes-file "$notes"\n'
+    )
