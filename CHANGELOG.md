@@ -10,6 +10,14 @@ versions follow Semantic Versioning.
 - Limited distribution archives to reviewed package files and added the PEP 561
   marker for downstream type checkers.
 
+## [0.3.2] - 2026-08-24
+
+### Security
+
+- Rejected ambiguous paths, timestamps, non-finite values, excessive nesting,
+  oversized pointer indexes, and non-collectable pytest symbol shapes.
+- Applied type-exact membership checks to structured evidence.
+
 ## [0.3.1] - 2026-08-24
 
 ### Changed
@@ -57,7 +65,8 @@ versions follow Semantic Versioning.
 - Adversarial, property-based, integration, and bounded performance tests.
 - Hardened CI, CodeQL, secret scanning, dependency updates, and release workflow.
 
-[Unreleased]: https://github.com/tovellan/proofstate/compare/v0.3.1...HEAD
+[Unreleased]: https://github.com/tovellan/proofstate/compare/v0.3.2...HEAD
+[0.3.2]: https://github.com/tovellan/proofstate/compare/v0.3.1...v0.3.2
 [0.3.1]: https://github.com/tovellan/proofstate/compare/v0.3.0...v0.3.1
 [0.3.0]: https://github.com/tovellan/proofstate/compare/v0.2.1...v0.3.0
 [0.2.1]: https://github.com/tovellan/proofstate/compare/v0.2.0...v0.2.1
