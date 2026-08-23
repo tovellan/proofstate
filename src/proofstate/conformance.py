@@ -6,6 +6,7 @@ import hashlib
 from dataclasses import dataclass
 from importlib.resources import files
 from importlib.resources.abc import Traversable
+from pathlib import Path
 from typing import Any, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, ValidationError, field_validator, model_validator
@@ -163,3 +164,31 @@ def run_conformance(root: Traversable | None = None) -> ConformanceResult:
         schema_version=manifest.schema_version,
         cases=results,
     )
+
+
+def export_conformance(
+    destination: Path,
+    root: Traversable | None = None,
+) -> ConformanceResult:
+    """Write the exact verified corpus to a new destination directory."""
+
+    fixture_root = root or _fixture_root()
+    result = run_conformance(fixture_root)
+    if not result.passed:
+        raise ValueError("conformance bundle must pass before export")
+    manifest = _load_manifest(fixture_root)
+    payloads = {"manifest.json": _read_bounded(fixture_root.joinpath("manifest.json"))}
+    for case in manifest.cases:
+        content = _read_bounded(fixture_root.joinpath(case.path))
+        if hashlib.sha256(content).hexdigest() != case.sha256:
+            raise ValueError("conformance fixture changed during export")
+        payloads[case.path] = content
+    if destination.exists():
+        raise FileExistsError("conformance export destination already exists")
+    if not destination.parent.is_dir():
+        raise FileNotFoundError("conformance export parent directory does not exist")
+    destination.mkdir(mode=0o755)
+    for name, content in sorted(payloads.items()):
+        with (destination / name).open("xb") as target:
+            target.write(content)
+    return result

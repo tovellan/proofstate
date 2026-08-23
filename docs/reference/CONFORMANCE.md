@@ -1,6 +1,6 @@
 # Conformance bundle
 
-ProofState 0.2.0 installs a portable `v1alpha1` fixture corpus inside the wheel.
+ProofState installs a portable `v1alpha1` fixture corpus inside the wheel.
 It gives independent parsers a shared set of valid and fail-closed documents.
 
 Run the bundled verifier:
@@ -8,6 +8,16 @@ Run the bundled verifier:
 ```sh
 proofstate conformance --format json
 ```
+
+Export the portable inputs from an installed wheel:
+
+```sh
+proofstate conformance --export ./proofstate-conformance-v1alpha1
+```
+
+ProofState verifies every digest before it creates the destination. The parent
+directory must exist and the destination itself must not exist. Export uses
+exclusive file creation and will not replace an existing file or directory.
 
 The result uses `proofstate.dev/conformance-result/v1alpha1`. Every case reports
 its identifier, expected classification, observed classification, and verdict.
