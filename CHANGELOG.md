@@ -5,6 +5,11 @@ versions follow Semantic Versioning.
 
 ## [Unreleased]
 
+### Fixed
+
+- Preserved YAML timestamp text for RFC 3339 validation, rejected non-string
+  mapping keys, and applied recursive type-exact structured comparisons.
+
 ## [0.3.3] - 2026-08-24
 
 ### Changed
