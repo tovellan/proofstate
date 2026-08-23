@@ -40,6 +40,9 @@ class GitRepository:
         environment = os.environ.copy()
         environment.update(
             {
+                "GIT_LITERAL_PATHSPECS": "1",
+                "GIT_NO_LAZY_FETCH": "1",
+                "GIT_NO_REPLACE_OBJECTS": "1",
                 "GIT_OPTIONAL_LOCKS": "0",
                 "LC_ALL": "C",
             }
