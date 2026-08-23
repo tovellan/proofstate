@@ -1,7 +1,7 @@
 # Compatibility policy
 
-Version 0.1.0 supports CPython 3.11, 3.12, 3.13, and 3.14 on operating systems
-with Git available. CI exercises Linux; local validation also exercises macOS.
+ProofState supports CPython 3.11, 3.12, 3.13, and 3.14 on operating systems with
+Git available. CI exercises Linux; local validation also exercises macOS.
 
 Patch releases preserve the documented Python API, CLI commands, exit statuses,
 and `v1alpha1` fields unless a security issue makes preservation unsafe. The

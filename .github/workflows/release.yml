@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
     inputs:
       tag:
-        description: Existing release tag, for example v0.1.0
+        description: Existing release tag, for example v0.3.5
         required: true
         type: string
       confirm:
@@ -43,6 +43,8 @@ jobs:
       - name: Validate source and tests
         run: |
           python3 scripts/verify_release.py --tag "$RELEASE_TAG"
+          git fetch --force --no-tags origin '+refs/heads/main:refs/remotes/origin/main'
+          git merge-base --is-ancestor HEAD refs/remotes/origin/main
           uv run ruff format --check .
           uv run ruff check .
           uv run mypy src/proofstate tests
@@ -52,12 +54,18 @@ jobs:
         run: make build
       - name: Verify release artifact versions
         run: python3 scripts/verify_release.py --tag "$RELEASE_TAG" --dist dist
-      - name: Verify installed conformance bundle
+      - name: Verify both installed distributions
         run: |
-          uv venv --python 3.11 release-env
-          uv pip install --python release-env/bin/python dist/proofstate-*.whl
-          release-env/bin/proofstate conformance
-          release-env/bin/proofstate conformance --export release-conformance
+          uv venv --python 3.11 wheel-env
+          uv pip install --python wheel-env/bin/python dist/proofstate-*.whl
+          wheel-env/bin/proofstate --version
+          wheel-env/bin/proofstate conformance
+          wheel-env/bin/proofstate conformance --export wheel-conformance
+          uv venv --python 3.11 sdist-env
+          uv pip install --python sdist-env/bin/python dist/proofstate-*.tar.gz
+          sdist-env/bin/proofstate --version
+          sdist-env/bin/proofstate conformance
+          sdist-env/bin/proofstate conformance --export sdist-conformance
       - name: Create release without publishing packages
         env:
           GH_TOKEN: ${{ github.token }}

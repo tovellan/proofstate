@@ -40,13 +40,22 @@ uv run pip-audit \
   --require-hashes
 
 wheel=$(find "$gate_tmp/dist" -maxdepth 1 -type f -name 'proofstate-*.whl' -print -quit)
+sdist=$(find "$gate_tmp/dist" -maxdepth 1 -type f -name 'proofstate-*.tar.gz' -print -quit)
 test -n "$wheel"
-uv venv --python 3.11 "$gate_tmp/venv"
-uv pip install --python "$gate_tmp/venv/bin/python" "$wheel"
-"$gate_tmp/venv/bin/proofstate" --version
-"$gate_tmp/venv/bin/proofstate" conformance
-"$gate_tmp/venv/bin/proofstate" conformance --export "$gate_tmp/conformance-export"
-"$gate_tmp/venv/bin/python" examples/basic/run.py
+test -n "$sdist"
+uv venv --python 3.11 "$gate_tmp/wheel-venv"
+uv pip install --python "$gate_tmp/wheel-venv/bin/python" "$wheel"
+"$gate_tmp/wheel-venv/bin/proofstate" --version
+"$gate_tmp/wheel-venv/bin/proofstate" conformance
+"$gate_tmp/wheel-venv/bin/proofstate" conformance --export "$gate_tmp/wheel-conformance"
+"$gate_tmp/wheel-venv/bin/python" examples/basic/run.py
+
+uv venv --python 3.11 "$gate_tmp/sdist-venv"
+uv pip install --python "$gate_tmp/sdist-venv/bin/python" "$sdist"
+"$gate_tmp/sdist-venv/bin/proofstate" --version
+"$gate_tmp/sdist-venv/bin/proofstate" conformance
+"$gate_tmp/sdist-venv/bin/proofstate" conformance --export "$gate_tmp/sdist-conformance"
+"$gate_tmp/sdist-venv/bin/python" examples/basic/run.py
 
 python3 scripts/check_repository.py
 git diff --check
