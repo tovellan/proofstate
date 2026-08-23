@@ -34,8 +34,8 @@ uv export --quiet \
   --output-file "$gate_tmp/requirements.txt"
 uv run pip-audit \
   --requirement "$gate_tmp/requirements.txt" \
-  --no-deps \
-  --disable-pip
+  --disable-pip \
+  --require-hashes
 
 wheel=$(find dist -maxdepth 1 -type f -name 'proofstate-*.whl' -print -quit)
 test -n "$wheel"
