@@ -45,6 +45,7 @@ uv venv --python 3.11 "$gate_tmp/venv"
 uv pip install --python "$gate_tmp/venv/bin/python" "$wheel"
 "$gate_tmp/venv/bin/proofstate" --version
 "$gate_tmp/venv/bin/proofstate" conformance
+"$gate_tmp/venv/bin/proofstate" conformance --export "$gate_tmp/conformance-export"
 "$gate_tmp/venv/bin/python" examples/basic/run.py
 
 python3 scripts/check_repository.py

@@ -10,7 +10,7 @@ from pathlib import Path
 from typing import NoReturn
 
 from proofstate import __version__
-from proofstate.conformance import ConformanceResult, run_conformance
+from proofstate.conformance import ConformanceResult, export_conformance, run_conformance
 from proofstate.errors import ErrorCode, ProofStateError
 from proofstate.evaluate import Evaluation, evaluate_scorecard
 from proofstate.models import GateLevel, HumanAttestation, Scorecard, parse_timestamp
@@ -55,6 +55,11 @@ def _parser() -> argparse.ArgumentParser:
         help="verify the installed v1alpha1 conformance bundle",
     )
     conformance.add_argument("--format", choices=["text", "json"], default="text")
+    conformance.add_argument(
+        "--export",
+        metavar="DIRECTORY",
+        help="write the verified corpus to a new directory",
+    )
     return parser
 
 
@@ -121,7 +126,19 @@ def main(argv: list[str] | None = None) -> None:
         _print_json(model.model_json_schema())
         return
     if arguments.command == "conformance":
-        conformance_result = run_conformance()
+        if arguments.export:
+            try:
+                conformance_result = export_conformance(Path(arguments.export))
+            except (OSError, ValueError) as error:
+                _fail(
+                    ProofStateError(
+                        ErrorCode.CONFORMANCE_EXPORT_FAILED,
+                        str(error),
+                    ),
+                    arguments.format,
+                )
+        else:
+            conformance_result = run_conformance()
         if arguments.format == "json":
             _print_json(conformance_result.to_dict())
         else:

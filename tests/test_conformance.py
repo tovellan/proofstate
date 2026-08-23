@@ -4,7 +4,9 @@ import json
 import shutil
 from pathlib import Path
 
-from proofstate.conformance import run_conformance
+import pytest
+
+from proofstate.conformance import export_conformance, run_conformance
 
 
 def fixture_root() -> Path:
@@ -53,3 +55,29 @@ def test_conformance_result_is_portable_json() -> None:
 
     assert payload["schema_version"] == "proofstate.dev/conformance-result/v1alpha1"
     assert payload["fixture_schema_version"] == ("proofstate.dev/conformance-manifest/v1alpha1")
+
+
+def test_conformance_export_preserves_exact_verified_files(tmp_path: Path) -> None:
+    destination = tmp_path / "exported"
+
+    result = export_conformance(destination, fixture_root())
+
+    assert result.passed is True
+    assert run_conformance(destination).passed is True
+    assert {path.name for path in destination.iterdir()} == {
+        path.name for path in fixture_root().iterdir()
+    }
+    for source in fixture_root().iterdir():
+        assert (destination / source.name).read_bytes() == source.read_bytes()
+
+
+def test_conformance_export_refuses_existing_destination(tmp_path: Path) -> None:
+    destination = tmp_path / "existing"
+    destination.mkdir()
+    marker = destination / "preserved.txt"
+    marker.write_text("keep", encoding="utf-8")
+
+    with pytest.raises(FileExistsError):
+        export_conformance(destination, fixture_root())
+
+    assert marker.read_text(encoding="utf-8") == "keep"

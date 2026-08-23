@@ -27,6 +27,8 @@ Prints a versioned document JSON Schema to standard output. The default remains
 
 Verifies the installed, digest-pinned `v1alpha1` conformance fixtures. Use
 `--format json` for a versioned result with each expected and observed case.
+Use `--export DIRECTORY` to write the exact verified corpus into a new directory.
+An existing destination fails with exit status `2` and is never modified.
 
 ## `proofstate --version`
 

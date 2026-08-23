@@ -20,6 +20,9 @@ from pydantic import (
 Identifier = Annotated[str, StringConstraints(pattern=r"^[a-z][a-z0-9._-]{0,63}$")]
 Sha256 = Annotated[str, StringConstraints(pattern=r"^[0-9a-f]{64}$")]
 GitObjectId = Annotated[str, StringConstraints(pattern=r"^(?:[0-9a-f]{40}|[0-9a-f]{64})$")]
+RFC3339_TIMESTAMP = re.compile(
+    r"^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:Z|[+-]\d{2}:\d{2})$"
+)
 
 
 class StrictModel(BaseModel):
@@ -30,9 +33,10 @@ def validate_repository_path(value: str) -> str:
     if not value or "\\" in value or "\x00" in value:
         raise ValueError("path must be a non-empty POSIX repository path")
     path = PurePosixPath(value)
-    if not path.parts or path.is_absolute() or any(part in {"", ".", ".."} for part in path.parts):
+    parts = value.split("/")
+    if path.is_absolute() or any(part in {"", ".", ".."} for part in parts):
         raise ValueError("path must be relative and cannot contain dot segments")
-    if path.parts[0] == ".git":
+    if parts[0] == ".git":
         raise ValueError("paths inside .git are not evidence")
     return value
 
@@ -86,8 +90,12 @@ class TestSymbolEvidence(StrictModel):
         if not re.fullmatch(r"[A-Za-z_][A-Za-z0-9_]*(?:\.[A-Za-z_][A-Za-z0-9_]*)*", value):
             raise ValueError("symbol must be a dotted Python identifier")
         parts = value.split(".")
-        if not (parts[-1].startswith("test_") or parts[0].startswith("Test")):
-            raise ValueError("pytest symbol must name a test function or Test class member")
+        top_level_test = len(parts) == 1 and parts[0].startswith("test_")
+        test_method = (
+            len(parts) == 2 and parts[0].startswith("Test") and parts[1].startswith("test_")
+        )
+        if not (top_level_test or test_method):
+            raise ValueError("pytest symbol must name a test function or Test class test method")
         return value
 
 
@@ -239,8 +247,13 @@ def parse_timestamp(value: Any) -> datetime:
     if isinstance(value, datetime):
         parsed = value
     elif isinstance(value, str):
+        if RFC3339_TIMESTAMP.fullmatch(value) is None:
+            raise ValueError("timestamp must be an RFC 3339 string")
         normalized = value[:-1] + "+00:00" if value.endswith("Z") else value
-        parsed = datetime.fromisoformat(normalized)
+        try:
+            parsed = datetime.fromisoformat(normalized)
+        except ValueError as error:
+            raise ValueError("timestamp must be a valid RFC 3339 string") from error
     else:
         raise ValueError("timestamp must be an RFC 3339 string")
     if parsed.tzinfo is None or parsed.utcoffset() is None:

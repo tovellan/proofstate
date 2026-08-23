@@ -57,6 +57,7 @@ jobs:
           uv venv --python 3.11 release-env
           uv pip install --python release-env/bin/python dist/proofstate-*.whl
           release-env/bin/proofstate conformance
+          release-env/bin/proofstate conformance --export release-conformance
       - name: Create release without publishing packages
         env:
           GH_TOKEN: ${{ github.token }}
