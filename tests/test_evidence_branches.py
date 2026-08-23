@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 from datetime import UTC, datetime
 from typing import Any, cast
 
@@ -11,6 +12,7 @@ from proofstate.evidence import (
     EvidenceResult,
     _artifact_check_passes,
     _json_type,
+    _json_values_equal,
     _resolve_pointer,
     verify_artifact,
     verify_attestation,
@@ -229,6 +231,56 @@ def test_nested_contains_uses_type_exact_composite_equality() -> None:
 
     assert result.code == EvidenceCode.ARTIFACT_CHECK_FAILED
     assert result.details == {"failed_check_indexes": [0]}
+
+
+def test_large_reversed_object_equality_passes_through_artifact_verification() -> None:
+    size = 30_000
+    observed = {f"key-{index:05d}": index for index in range(size)}
+    expected = {f"key-{index:05d}": index for index in reversed(range(size))}
+    evidence = ArtifactEvidence.model_validate(
+        {
+            "type": "artifact",
+            "path": "report.json",
+            "format": "json",
+            "checks": [{"pointer": "/results", "operator": "equals", "expected": expected}],
+        }
+    )
+    content = json.dumps({"results": observed}, separators=(",", ":")).encode()
+
+    result = verify_artifact(evidence, repository_with(content), "a" * 40, 1_048_576)
+
+    assert len(content) < 1_048_576
+    assert result.code == EvidenceCode.VERIFIED
+
+
+def test_object_equality_uses_one_direct_lookup_per_key() -> None:
+    class LookupCountingDict(dict[str, int]):
+        def __init__(self, values: dict[str, int], *, allow_items: bool) -> None:
+            super().__init__(values)
+            self.allow_items = allow_items
+            self.lookups = 0
+
+        def items(self) -> Any:
+            if not self.allow_items:
+                raise AssertionError("right-side items must not be scanned")
+            return super().items()
+
+        def __getitem__(self, key: str) -> int:
+            self.lookups += 1
+            return super().__getitem__(key)
+
+    size = 30_000
+    left = LookupCountingDict(
+        {f"key-{index:05d}": index for index in range(size)},
+        allow_items=True,
+    )
+    right = LookupCountingDict(
+        {f"key-{index:05d}": index for index in reversed(range(size))},
+        allow_items=False,
+    )
+
+    assert _json_values_equal(left, right) is True
+    assert right.lookups == size
 
 
 def test_attestation_invalid_future_digest_and_missing() -> None:

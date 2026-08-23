@@ -244,19 +244,11 @@ def _json_values_equal(left: Any, right: Any) -> bool:
             for left_item, right_item in zip(left, right, strict=True)
         )
     if isinstance(left, dict):
-        if len(left) != len(right):
+        if left.keys() != right.keys():
             return False
-        unmatched = list(right.items())
-        for left_key, left_value in left.items():
-            for index, (right_key, right_value) in enumerate(unmatched):
-                if type(left_key) is type(right_key) and left_key == right_key:
-                    if not _json_values_equal(left_value, right_value):
-                        return False
-                    unmatched.pop(index)
-                    break
-            else:
-                return False
-        return True
+        return all(
+            _json_values_equal(left_value, right[left_key]) for left_key, left_value in left.items()
+        )
     return bool(left == right)
 
 

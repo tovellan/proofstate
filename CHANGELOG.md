@@ -5,6 +5,13 @@ versions follow Semantic Versioning.
 
 ## [Unreleased]
 
+## [0.3.6] - 2026-08-24
+
+### Fixed
+
+- Compared structured object keys once and values by direct lookup, preventing
+  reversed key order from turning bounded evidence equality into quadratic work.
+
 ## [0.3.5] - 2026-08-24
 
 ### Security
@@ -96,7 +103,8 @@ versions follow Semantic Versioning.
 - Adversarial, property-based, integration, and bounded performance tests.
 - Hardened CI, CodeQL, secret scanning, dependency updates, and release workflow.
 
-[Unreleased]: https://github.com/tovellan/proofstate/compare/v0.3.5...HEAD
+[Unreleased]: https://github.com/tovellan/proofstate/compare/v0.3.6...HEAD
+[0.3.6]: https://github.com/tovellan/proofstate/compare/v0.3.5...v0.3.6
 [0.3.5]: https://github.com/tovellan/proofstate/compare/v0.3.4...v0.3.5
 [0.3.4]: https://github.com/tovellan/proofstate/compare/v0.3.3...v0.3.4
 [0.3.3]: https://github.com/tovellan/proofstate/compare/v0.3.2...v0.3.3

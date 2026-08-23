@@ -13,7 +13,7 @@ def test_current_source_versions_agree() -> None:
 
     version, failures = source_version(root)
 
-    assert version == "0.3.5"
+    assert version == "0.3.6"
     assert failures == []
 
 
