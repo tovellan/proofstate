@@ -41,6 +41,19 @@ def test_cli_schema_is_json(capsys: pytest.CaptureFixture[str]) -> None:
     assert payload["title"] == "Scorecard"
 
 
+def test_cli_attestation_schema_is_json(capsys: pytest.CaptureFixture[str]) -> None:
+    main(["schema", "attestation"])
+    payload = json.loads(capsys.readouterr().out)
+    assert payload["title"] == "HumanAttestation"
+
+
+def test_cli_conformance_is_machine_readable(capsys: pytest.CaptureFixture[str]) -> None:
+    main(["conformance", "--format", "json"])
+    payload = json.loads(capsys.readouterr().out)
+    assert payload["passed"] is True
+    assert len(payload["cases"]) == 10
+
+
 def test_cli_validation_error_uses_exit_two(
     repository_fixture: RepositoryFixture,
     capsys: pytest.CaptureFixture[str],

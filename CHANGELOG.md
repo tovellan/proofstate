@@ -7,12 +7,24 @@ versions follow Semantic Versioning.
 
 ### Changed
 
-- Pinned GitHub Actions to current Node 24 releases and isolated cache writers
-  across concurrent CI jobs.
 - Limited distribution archives to reviewed package files and added the PEP 561
   marker for downstream type checkers.
 - Bound release notes to the exact semantic version tag selected by a
   maintainer.
+
+## [0.2.0] - 2026-08-24
+
+### Added
+
+- Installed, digest-pinned `v1alpha1` scorecard and attestation conformance fixtures.
+- Text and JSON conformance verification with per-case expected outcomes.
+- Attestation JSON Schema export through the existing schema command.
+
+### Changed
+
+- Pinned GitHub Actions to current Node 24 releases and isolated cache writers
+  across concurrent CI jobs.
+- Verified the installed conformance bundle during clean-wheel and release checks.
 
 ## [0.1.0] - 2026-08-24
 
@@ -26,5 +38,6 @@ versions follow Semantic Versioning.
 - Adversarial, property-based, integration, and bounded performance tests.
 - Hardened CI, CodeQL, secret scanning, dependency updates, and release workflow.
 
-[Unreleased]: https://github.com/tovellan/proofstate/compare/v0.1.0...HEAD
+[Unreleased]: https://github.com/tovellan/proofstate/compare/v0.2.0...HEAD
+[0.2.0]: https://github.com/tovellan/proofstate/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/tovellan/proofstate/releases/tag/v0.1.0

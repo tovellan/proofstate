@@ -4,7 +4,7 @@ ProofState uses a maintainer-led model during its initial development.
 
 Maintainers merge changes, publish releases, handle security reports, and keep
 the schema and compatibility policy coherent. Decisions should be based on
-documented technical rationale, tests, user impact, and the fail-closed security
+public technical rationale, tests, user impact, and the fail-closed security
 contract.
 
 Substantial changes start with an issue. Maintainers seek rough consensus. When
