@@ -32,14 +32,18 @@ passing.
 - Evidence commits use full object IDs and must be ancestors of the scorecard
   revision.
 - Inputs are byte-bounded before parsing. Installed conformance inputs are read
-  only through the limit plus one byte.
-- YAML uses safe constructors and rejects duplicate keys, non-string mapping
-  keys, aliases, anchors, and explicit tags. Implicit timestamps remain strings
-  until schema validation. JSON duplicate keys are rejected.
+  only through the limit plus one byte. Structured inputs reject more than
+  125,000 scalar and collection nodes; YAML enforces the limit before
+  constructing the document object graph.
+- YAML uses isolated YAML 1.2 Core scalar resolvers on PyYAML 6.x and safe
+  constructors. Duplicate keys, plain merge keys, non-string mapping keys,
+  directives, aliases, anchors, explicit tags, and non-JSON values are rejected.
+  Implicit timestamps remain strings until schema validation. JSON duplicate
+  keys and nonstandard constants are rejected.
 - Python tests are parsed with `ast`; repository code is never imported or run.
 - Structured checks use a fixed operator set with no expressions or regular
   expressions. Object equality compares key sets once and uses direct key
-  lookups.
+  lookups. Array traversal accepts only canonical ASCII decimal indexes.
 - Attestations require a bounded statement, aware timestamps, an unexpired
   window, and exact scope.
 - Dependency validation and evaluation are iterative within the declared
@@ -54,7 +58,8 @@ passing.
 - Redirect a named object through a local Git replacement ref.
 - Use a symlink to point outside the repository.
 - Hide a duplicate key in YAML or JSON.
-- Use YAML construction tags or aliases to create unsafe or oversized objects.
+- Exploit YAML 1.1 scalar ambiguity, merge keys, construction tags, or aliases.
+- Address one array element through alternate leading-zero or Unicode indexes.
 - Claim a review for another repository, commit, or assertion.
 - Reuse an expired or not-yet-valid attestation.
 - Confuse booleans and numbers in structured comparisons.
@@ -71,6 +76,8 @@ passing.
 - A named test symbol proves presence, not collection or successful execution.
 - ProofState does not fetch missing Git objects and may fail in shallow or
   partial clones.
+- Repository and distribution gates assume the checked-out source tree is not
+  concurrently mutated while they inspect it.
 - Denial of service below configured size and count limits is reduced but not
   eliminated.
 

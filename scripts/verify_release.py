@@ -14,10 +14,31 @@ from email.parser import BytesParser
 from pathlib import Path
 
 SEMVER = re.compile(r"^(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$")
+TAG_OBJECT = re.compile(r"^object [0-9a-f]{40}$")
+TAGGER = re.compile(
+    r"^tagger Tovellan Maintainers <tovellan@users\.noreply\.github\.com> "
+    r"[0-9]+ [+-][0-9]{4}$"
+)
 git_path = shutil.which("git")
 if git_path is None:
     raise RuntimeError("git is required")
 GIT: str = git_path
+
+
+def verify_tag_object(content: str, tag: str, version: str) -> list[str]:
+    headers, separator, message = content.partition("\n\n")
+    lines = headers.splitlines()
+    if (
+        not separator
+        or len(lines) != 4
+        or TAG_OBJECT.fullmatch(lines[0]) is None
+        or lines[1] != "type commit"
+        or lines[2] != f"tag {tag}"
+        or TAGGER.fullmatch(lines[3]) is None
+        or message != f"ProofState {version}\n"
+    ):
+        return ["release tag metadata does not match the generic release contract"]
+    return []
 
 
 def source_version(root: Path) -> tuple[str, list[str]]:
@@ -68,6 +89,11 @@ def verify_tag(root: Path, tag: str, version: str) -> list[str]:
     if object_type.returncode != 0 or object_type.stdout.strip() != "tag":
         failures.append("release tag must exist and be annotated")
         return failures
+    tag_object = git("cat-file", "tag", tag)
+    if tag_object.returncode != 0:
+        failures.append("release tag object could not be read")
+        return failures
+    failures.extend(verify_tag_object(tag_object.stdout, tag, version))
     tag_commit = git("rev-parse", f"{tag}^{{commit}}")
     head_commit = git("rev-parse", "HEAD")
     if (

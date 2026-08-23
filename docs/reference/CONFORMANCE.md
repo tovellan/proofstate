@@ -2,6 +2,9 @@
 
 ProofState installs a portable `v1alpha1` fixture corpus inside the wheel.
 It gives independent parsers a shared set of valid and fail-closed documents.
+Version 0.4.0 carries 17 cases, including seven YAML cases that distinguish
+Core scalar resolution from legacy YAML 1.1 spellings and cover merge-key,
+non-finite, and non-string-key rejection.
 
 Run the bundled verifier:
 

@@ -24,12 +24,31 @@ def test_installed_conformance_bundle_passes() -> None:
     result = run_conformance(fixture_root())
 
     assert result.passed is True
-    assert len(result.cases) == 10
+    assert len(result.cases) == 17
     assert {case.observed for case in result.cases} == {
         "valid",
         "invalid_document",
         "invalid_scorecard",
         "invalid_attestation",
+    }
+
+
+def test_yaml_core_conformance_cases_have_declared_outcomes() -> None:
+    result = run_conformance(fixture_root())
+    yaml_cases = {
+        case.case_id: (case.expected, case.observed)
+        for case in result.cases
+        if case.case_id.startswith("scorecard-yaml-")
+    }
+
+    assert yaml_cases == {
+        "scorecard-yaml-core-scalars": ("valid", "valid"),
+        "scorecard-yaml-legacy-binary": ("invalid_scorecard", "invalid_scorecard"),
+        "scorecard-yaml-legacy-separator": ("invalid_scorecard", "invalid_scorecard"),
+        "scorecard-yaml-legacy-sexagesimal": ("invalid_scorecard", "invalid_scorecard"),
+        "scorecard-yaml-merge-key": ("invalid_document", "invalid_document"),
+        "scorecard-yaml-nonfinite": ("invalid_document", "invalid_document"),
+        "scorecard-yaml-nonstring-key": ("invalid_document", "invalid_document"),
     }
 
 
@@ -55,6 +74,27 @@ def test_conformance_bundle_fails_cleanly_on_invalid_manifest(tmp_path: Path) ->
 
     assert result.passed is False
     assert result.cases[0].observed == "invalid_manifest"
+
+
+def test_conformance_bundle_normalizes_fixture_permission_error(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from proofstate import conformance as conformance_module
+
+    original_read = conformance_module._read_bounded
+
+    def permission_failure(path: Any) -> bytes:
+        if path.name == "attestation-valid.json":
+            raise PermissionError("denied")
+        return original_read(path)
+
+    monkeypatch.setattr(conformance_module, "_read_bounded", permission_failure)
+
+    result = run_conformance(fixture_root())
+
+    failed = next(case for case in result.cases if case.case_id == "attestation-valid")
+    assert result.passed is False
+    assert failed.observed == "fixture_unavailable"
 
 
 def test_conformance_result_is_portable_json() -> None:

@@ -1,0 +1,17 @@
+schema_version: proofstate.dev/scorecard/v1alpha1
+repository:
+  identity: example.invalid/widget
+  commit: "0000000000000000000000000000000000000000"
+assertions:
+  - id: nonfinite
+    title: Non-finite values are rejected
+    severity: high
+    evidence:
+      machine:
+        - type: artifact
+          path: evidence/result.yaml
+          format: yaml
+          checks:
+            - pointer: /value
+              operator: equals
+              expected: .inf

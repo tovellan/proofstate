@@ -5,6 +5,51 @@ versions follow Semantic Versioning.
 
 ## [Unreleased]
 
+## [0.4.0] - 2026-08-24
+
+### Changed
+
+- Adopted YAML 1.2 Core scalar resolution on PyYAML 6.x while retaining a
+  restricted, JSON-compatible document model.
+- Required canonical ASCII decimal indexes when a JSON Pointer traverses an
+  array. Object keys retain their exact text.
+- Restricted structured check expectations to finite JSON-compatible values
+  and required numeric operators to receive numbers rather than booleans or
+  numeric-looking strings.
+- Expanded the installed conformance corpus from 10 to 17 cases with portable
+  YAML scalar, merge-key, non-finite, and mapping-key coverage.
+
+### Security
+
+- Rejected plain YAML merge keys and non-JSON values at the document boundary.
+- Rejected YAML directives before parser-owned numeric conversion.
+- Capped structured documents at 125,000 nodes, with YAML rejected before
+  constructing larger object graphs from byte-bounded inputs.
+- Applied a library-owned 4,300-digit decimal integer limit in JSON and YAML so
+  acceptance and conversion cost do not depend on process-global Python state.
+- Rejected tracked and package-source symlinks or special files before reading
+  source content during repository and distribution gates.
+- Limited test-symbol source to 64 KiB before AST parsing and reused identical
+  machine-evidence results within one evaluation. Parsed symbol indexes remain
+  cached for sources admitted by the cumulative evaluation work budget.
+- Reused immutable file digests and resource-bounded parsed artifact and
+  attestation material within one evaluation. List membership builds a
+  type-exact structural index instead of repeating scalar or composite scans.
+- Batched immutable tree lookups and capped each evaluation at 256 uncached
+  regular evidence sources and 10 MiB of source input, with stable `PSE104`
+  failures after cumulative work is exhausted.
+- Memoized type-exact composite membership digests once per retained document.
+- Required generic annotated release tags and verified the immutable release,
+  exact assets, and GitHub release attestation after publication.
+
+### Fixed
+
+- Used direct object-key lookup for structured `contains` checks instead of
+  scanning every key.
+- Preserved trailing filesystem characters when discovering a Git worktree,
+  normalized unreadable conformance fixtures, and isolated serialized results
+  from later caller mutation.
+
 ## [0.3.7] - 2026-08-24
 
 ### Security
@@ -121,7 +166,8 @@ versions follow Semantic Versioning.
 - Adversarial, property-based, integration, and bounded performance tests.
 - Hardened CI, CodeQL, secret scanning, dependency updates, and release workflow.
 
-[Unreleased]: https://github.com/tovellan/proofstate/compare/v0.3.7...HEAD
+[Unreleased]: https://github.com/tovellan/proofstate/compare/v0.4.0...HEAD
+[0.4.0]: https://github.com/tovellan/proofstate/compare/v0.3.7...v0.4.0
 [0.3.7]: https://github.com/tovellan/proofstate/compare/v0.3.6...v0.3.7
 [0.3.6]: https://github.com/tovellan/proofstate/compare/v0.3.5...v0.3.6
 [0.3.5]: https://github.com/tovellan/proofstate/compare/v0.3.4...v0.3.5

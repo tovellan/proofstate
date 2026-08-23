@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import re
 import shutil
+import stat
 import subprocess
 from pathlib import Path
 
@@ -20,9 +21,16 @@ FORBIDDEN_TERMS = (
     "held" + "-out",
 )
 FORBIDDEN_DASHES = {"\N{EN DASH}", "\N{EM DASH}"}
-GIT = shutil.which("git")
-if GIT is None:
-    raise RuntimeError("git is required")
+
+
+def _find_git() -> str:
+    git = shutil.which("git")
+    if git is None:
+        raise RuntimeError("git is required")
+    return git
+
+
+GIT = _find_git()
 
 
 def tracked_files(root: Path) -> list[Path]:
@@ -35,9 +43,42 @@ def tracked_files(root: Path) -> list[Path]:
 
 
 def check_file(root: Path, path: Path) -> list[str]:
-    relative = path.relative_to(root).as_posix()
+    try:
+        relative_path = path.relative_to(root)
+    except ValueError:
+        return ["tracked path must stay within the repository root"]
+    if not relative_path.parts or any(part in {"", ".", ".."} for part in relative_path.parts):
+        return [f"{relative_path.as_posix()}: tracked path must stay within the repository root"]
+
+    relative = relative_path.as_posix()
+    current = root
+    directories = [(current, ".")]
+    for part in relative_path.parts[:-1]:
+        current /= part
+        directories.append((current, current.relative_to(root).as_posix()))
+    for directory, label in directories:
+        try:
+            mode = directory.lstat().st_mode
+        except OSError:
+            return [f"{relative}: tracked path ancestor must be an existing directory: {label!r}"]
+        if not stat.S_ISDIR(mode):
+            return [f"{relative}: tracked path ancestor must be an existing directory: {label!r}"]
+
+    current /= relative_path.parts[-1]
+    try:
+        metadata = current.lstat()
+    except OSError:
+        return [f"{relative}: tracked entry must be a regular file"]
+    if not stat.S_ISREG(metadata.st_mode):
+        return [f"{relative}: tracked entry must be a regular file"]
+    if metadata.st_size > MAX_TRACKED_BYTES:
+        return [f"{relative}: exceeds {MAX_TRACKED_BYTES} bytes"]
+    try:
+        with current.open("rb") as source:
+            content = source.read(MAX_TRACKED_BYTES + 1)
+    except OSError:
+        return [f"{relative}: tracked entry could not be read"]
     failures: list[str] = []
-    content = path.read_bytes()
     if len(content) > MAX_TRACKED_BYTES:
         failures.append(f"{relative}: exceeds {MAX_TRACKED_BYTES} bytes")
     if b"\x00" in content:

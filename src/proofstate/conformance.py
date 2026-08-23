@@ -145,7 +145,7 @@ def run_conformance(root: Traversable | None = None) -> ConformanceResult:
     for case in manifest.cases:
         try:
             content = _read_bounded(fixture_root.joinpath(case.path))
-        except (FileNotFoundError, IsADirectoryError, ValueError):
+        except (OSError, ValueError):
             observed = "fixture_unavailable"
         else:
             if hashlib.sha256(content).hexdigest() != case.sha256:

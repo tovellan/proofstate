@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
     inputs:
       tag:
-        description: Existing release tag, for example v0.3.7
+        description: Existing annotated release tag, for example vX.Y.Z
         required: true
         type: string
       confirm:
@@ -43,6 +43,10 @@ jobs:
           test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
           git fetch --force --no-tags origin '+refs/heads/main:refs/remotes/origin/main'
           git merge-base --is-ancestor "$GITHUB_SHA" refs/remotes/origin/main
+      - name: Preflight source tree
+        run: |
+          python3 scripts/check_repository.py
+          python3 scripts/check_distribution.py --source-only
       - name: Install uv and Python
         uses: astral-sh/setup-uv@20cfd1bf945f4377ade1205e4dbc17946fc9a30d # v10.0.1
         with:
@@ -58,7 +62,6 @@ jobs:
           uv run ruff check .
           uv run mypy src/proofstate tests
           uv run pytest --cov=proofstate --cov-report=term-missing
-          python3 scripts/check_repository.py
       - name: Build distributions
         run: make build
       - name: Verify release artifact versions
@@ -82,7 +85,9 @@ jobs:
             ${{ github.workspace }}/dist/proofstate-*.whl
             ${{ github.workspace }}/dist/proofstate-*.tar.gz
           push-to-registry: false
-      - name: Create release without publishing packages
+      # Organization owner enforcement keeps immutable releases enabled for this
+      # selected repository. This token intentionally has no Administration access.
+      - name: Create draft release without publishing packages
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
@@ -93,7 +98,49 @@ jobs:
           test -f "$notes"
           test -f "$wheel"
           test -f "$sdist"
-          gh release create "$RELEASE_TAG" "$wheel" "$sdist" \
+          gh release create "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" \
+            --draft \
             --verify-tag \
             --title "ProofState $version" \
             --notes-file "$notes"
+          gh release upload "$RELEASE_TAG" "$wheel" "$sdist" \
+            --repo "$GITHUB_REPOSITORY"
+          gh release edit "$RELEASE_TAG" --draft=false \
+            --repo "$GITHUB_REPOSITORY"
+      - name: Verify immutable release and automatic attestation
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          version="${RELEASE_TAG#v}"
+          wheel="dist/proofstate-${version}-py3-none-any.whl"
+          sdist="dist/proofstate-${version}.tar.gz"
+          tag_object="$(git rev-parse "refs/tags/$RELEASE_TAG")"
+          release_json="$RUNNER_TEMP/proofstate-release.json"
+          attestation_json="$RUNNER_TEMP/proofstate-release-attestation.json"
+          tag_ref_json="$RUNNER_TEMP/proofstate-tag-ref.json"
+          tag_object_json="$RUNNER_TEMP/proofstate-tag-object.json"
+          for attempt in {1..12}; do
+            if gh release verify "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" \
+              --format json > "$attestation_json"; then
+              break
+            fi
+            test "$attempt" -lt 12
+            sleep 5
+          done
+          gh api "repos/$GITHUB_REPOSITORY/releases/tags/$RELEASE_TAG" > "$release_json"
+          gh api "repos/$GITHUB_REPOSITORY/git/ref/tags/$RELEASE_TAG" > "$tag_ref_json"
+          gh api "repos/$GITHUB_REPOSITORY/git/tags/$tag_object" > "$tag_object_json"
+          gh release verify-asset "$RELEASE_TAG" "$wheel" \
+            --repo "$GITHUB_REPOSITORY"
+          gh release verify-asset "$RELEASE_TAG" "$sdist" \
+            --repo "$GITHUB_REPOSITORY"
+          python3 scripts/verify_published_release.py \
+            --release-json "$release_json" \
+            --attestation-json "$attestation_json" \
+            --tag-ref-json "$tag_ref_json" \
+            --tag-object-json "$tag_object_json" \
+            --tag "$RELEASE_TAG" \
+            --tag-object "$tag_object" \
+            --commit "$GITHUB_SHA" \
+            --repository "$GITHUB_REPOSITORY" \
+            --dist dist

@@ -8,7 +8,13 @@ from typing import Any, cast
 
 import yaml
 
-from scripts.verify_release import SEMVER, source_version, verify_artifacts, verify_tag
+from scripts.verify_release import (
+    SEMVER,
+    source_version,
+    verify_artifacts,
+    verify_tag,
+    verify_tag_object,
+)
 
 
 def test_current_source_versions_agree() -> None:
@@ -16,7 +22,7 @@ def test_current_source_versions_agree() -> None:
 
     version, failures = source_version(root)
 
-    assert version == "0.3.7"
+    assert version == "0.4.0"
     assert failures == []
 
 
@@ -33,6 +39,28 @@ def test_tag_verification_rejects_mismatch_and_missing_tag() -> None:
     assert verify_tag(root, "v999.999.999", "999.999.999") == [
         "release tag must exist and be annotated"
     ]
+
+
+def test_tag_object_requires_generic_tagger_and_exact_message() -> None:
+    valid = (
+        "object " + ("a" * 40) + "\n"
+        "type commit\n"
+        "tag v0.4.0\n"
+        "tagger Tovellan Maintainers <tovellan@users.noreply.github.com> "
+        "1787521514 +0530\n\n"
+        "ProofState 0.4.0\n"
+    )
+
+    assert verify_tag_object(valid, "v0.4.0", "0.4.0") == []
+    assert verify_tag_object(
+        valid.replace("Tovellan Maintainers", "Named Person"), "v0.4.0", "0.4.0"
+    )
+    assert verify_tag_object(
+        valid + "Co-authored-by: Named Person <person@example.invalid>\n", "v0.4.0", "0.4.0"
+    )
+    assert verify_tag_object(
+        valid.replace("object " + ("a" * 40), "object HEAD"), "v0.4.0", "0.4.0"
+    )
 
 
 def test_artifact_verification_reads_both_metadata_formats(tmp_path: Path) -> None:
@@ -81,16 +109,20 @@ def test_release_workflow_binds_and_attests_exact_artifacts() -> None:
     names = [step["name"] for step in steps]
     checkout = steps[names.index("Check out the requested tag")]
     identity = steps[names.index("Validate release identity")]["run"]
+    preflight = steps[names.index("Preflight source tree")]["run"]
     source_validation = steps[names.index("Validate source and tests")]["run"]
     attestation = steps[names.index("Attest release distributions")]
-    release = steps[names.index("Create release without publishing packages")]["run"]
+    release = steps[names.index("Create draft release without publishing packages")]["run"]
+    published = steps[names.index("Verify immutable release and automatic attestation")]["run"]
 
     for critical_name in {
         "Check out the requested tag",
         "Validate release identity",
+        "Preflight source tree",
         "Validate source and tests",
         "Attest release distributions",
-        "Create release without publishing packages",
+        "Create draft release without publishing packages",
+        "Verify immutable release and automatic attestation",
     }:
         critical_step = steps[names.index(critical_name)]
         assert "continue-on-error" not in critical_step
@@ -104,12 +136,16 @@ def test_release_workflow_binds_and_attests_exact_artifacts() -> None:
         "persist-credentials": False,
     }
     assert names.index("Check out the requested tag") < names.index("Validate release identity")
-    assert names.index("Validate release identity") < names.index("Install uv and Python")
+    assert names.index("Validate release identity") < names.index("Preflight source tree")
+    assert names.index("Preflight source tree") < names.index("Install uv and Python")
     assert names.index("Verify both installed distributions") < names.index(
         "Attest release distributions"
     )
     assert names.index("Attest release distributions") < names.index(
-        "Create release without publishing packages"
+        "Create draft release without publishing packages"
+    )
+    assert names.index("Create draft release without publishing packages") < names.index(
+        "Verify immutable release and automatic attestation"
     )
     assert identity == (
         'test "$GITHUB_REF" = "refs/heads/main"\n'
@@ -120,6 +156,9 @@ def test_release_workflow_binds_and_attests_exact_artifacts() -> None:
         "git fetch --force --no-tags origin "
         "'+refs/heads/main:refs/remotes/origin/main'\n"
         'git merge-base --is-ancestor "$GITHUB_SHA" refs/remotes/origin/main\n'
+    )
+    assert preflight == (
+        "python3 scripts/check_repository.py\npython3 scripts/check_distribution.py --source-only\n"
     )
     assert source_validation.splitlines()[0] == (
         'python3 scripts/verify_release.py --tag "$RELEASE_TAG"'
@@ -133,16 +172,12 @@ def test_release_workflow_binds_and_attests_exact_artifacts() -> None:
         ),
         "push-to-registry": False,
     }
-    assert release == (
-        'version="${RELEASE_TAG#v}"\n'
-        'notes="docs/release-notes/${version}.md"\n'
-        'wheel="dist/proofstate-${version}-py3-none-any.whl"\n'
-        'sdist="dist/proofstate-${version}.tar.gz"\n'
-        'test -f "$notes"\n'
-        'test -f "$wheel"\n'
-        'test -f "$sdist"\n'
-        'gh release create "$RELEASE_TAG" "$wheel" "$sdist" \\\n'
-        "  --verify-tag \\\n"
-        '  --title "ProofState $version" \\\n'
-        '  --notes-file "$notes"\n'
-    )
+    assert 'gh release create "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" \\\n' in release
+    assert "  --draft" in release
+    assert 'gh release upload "$RELEASE_TAG" "$wheel" "$sdist"' in release
+    assert 'gh release edit "$RELEASE_TAG" --draft=false' in release
+    assert 'gh release verify "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY"' in published
+    assert 'gh release verify-asset "$RELEASE_TAG" "$wheel"' in published
+    assert 'gh release verify-asset "$RELEASE_TAG" "$sdist"' in published
+    assert "scripts/verify_published_release.py" in published
+    assert "Administration" not in published

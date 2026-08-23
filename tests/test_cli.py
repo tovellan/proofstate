@@ -3,11 +3,12 @@ from __future__ import annotations
 import json
 from datetime import UTC, datetime
 from pathlib import Path
+from typing import Any
 
 import pytest
 
 from proofstate.cli import main
-from tests.conftest import RepositoryFixture
+from tests.conftest import RepositoryFixture, git
 
 NOW = datetime(2026, 8, 24, tzinfo=UTC)
 
@@ -52,7 +53,57 @@ def test_cli_conformance_is_machine_readable(capsys: pytest.CaptureFixture[str])
     main(["conformance", "--format", "json"])
     payload = json.loads(capsys.readouterr().out)
     assert payload["passed"] is True
-    assert len(payload["cases"]) == 10
+    assert len(payload["cases"]) == 17
+
+
+def test_cli_conformance_normalizes_fixture_permission_error(
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    from proofstate import conformance as conformance_module
+
+    original_read = conformance_module._read_bounded
+
+    def permission_failure(path: Any) -> bytes:
+        if path.name == "attestation-valid.json":
+            raise PermissionError("denied")
+        return original_read(path)
+
+    monkeypatch.setattr(conformance_module, "_read_bounded", permission_failure)
+
+    with pytest.raises(SystemExit) as stopped:
+        main(["conformance", "--format", "json"])
+
+    assert stopped.value.code == 1
+    payload = json.loads(capsys.readouterr().out)
+    failed = next(case for case in payload["cases"] if case["id"] == "attestation-valid")
+    assert failed["observed"] == "fixture_unavailable"
+
+
+def test_cli_out_of_range_yaml_escape_uses_invalid_document_envelope(
+    repository_fixture: RepositoryFixture,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    scorecard = repository_fixture.root / ".proofstate/scorecard.yaml"
+    scorecard.write_bytes(b'"\\UFFFFFFFF"\n')
+    git(repository_fixture.root, "add", "--", ".proofstate/scorecard.yaml")
+    git(repository_fixture.root, "commit", "-m", "Record invalid YAML escape")
+
+    with pytest.raises(SystemExit) as stopped:
+        main(
+            [
+                "check",
+                ".proofstate/scorecard.yaml",
+                "--repo",
+                str(repository_fixture.root),
+                "--format",
+                "json",
+            ]
+        )
+
+    assert stopped.value.code == 2
+    payload = json.loads(capsys.readouterr().out)
+    assert payload["code"] == "PS006_INVALID_DOCUMENT"
 
 
 def test_cli_exports_conformance_bundle(
@@ -102,6 +153,28 @@ def test_cli_validation_error_uses_exit_two(
     assert stopped.value.code == 2
     payload = json.loads(capsys.readouterr().out)
     assert payload["code"] == "PS004_SCORECARD_NOT_FOUND"
+
+
+def test_cli_oversized_scorecard_path_uses_json_error_envelope(
+    repository_fixture: RepositoryFixture,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    with pytest.raises(SystemExit) as stopped:
+        main(
+            [
+                "check",
+                "x" * 16_384,
+                "--repo",
+                str(repository_fixture.root),
+                "--format",
+                "json",
+            ]
+        )
+
+    captured = capsys.readouterr()
+    assert stopped.value.code == 2
+    assert json.loads(captured.out)["code"] == "PS001_INVALID_ARGUMENT"
+    assert captured.err == ""
 
 
 @pytest.mark.parametrize(

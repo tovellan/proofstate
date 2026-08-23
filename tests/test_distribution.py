@@ -5,18 +5,22 @@ import csv
 import hashlib
 import io
 import stat
+import sys
 import tarfile
 import warnings
 import zipfile
-from collections.abc import Mapping
+from collections.abc import Iterator, Mapping
 from pathlib import Path
 
 import pytest
 
+import scripts.check_distribution as distribution
 from scripts.check_distribution import (
+    MAX_MEMBER_BYTES,
     DistributionError,
     _check_sdist,
     _check_wheel,
+    _source_files,
     _validate_paths,
 )
 
@@ -206,6 +210,160 @@ def test_matching_archives_pass(tmp_path: Path) -> None:
     _check_sdist(sdist, SOURCE_FILES)
 
 
+def test_source_files_include_yaml_fixtures(tmp_path: Path) -> None:
+    package = tmp_path / "src" / "proofstate"
+    fixtures = package / "fixtures"
+    fixtures.mkdir(parents=True)
+    (package / "module.py").write_text("value = 1\n", encoding="utf-8")
+    (package / "module.py").chmod(0o755)
+    (fixtures / "case.json").write_text("{}\n", encoding="utf-8")
+    (fixtures / "case.yaml").write_text("value: true\n", encoding="utf-8")
+    (fixtures / "ignored.txt").write_text("not packaged\n", encoding="utf-8")
+
+    assert set(_source_files(tmp_path)) == {
+        "src/proofstate/fixtures/case.json",
+        "src/proofstate/fixtures/case.yaml",
+        "src/proofstate/module.py",
+    }
+
+
+@pytest.mark.parametrize("symlink_component", ["root", "src", "package"])
+def test_source_files_reject_symlinked_directory_chain_before_traversal(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    symlink_component: str,
+) -> None:
+    root = tmp_path / "repository"
+    external = tmp_path / f"external-{symlink_component}"
+    if symlink_component == "root":
+        (external / "src" / "proofstate").mkdir(parents=True)
+        root.symlink_to(external, target_is_directory=True)
+    elif symlink_component == "src":
+        root.mkdir()
+        (external / "proofstate").mkdir(parents=True)
+        (root / "src").symlink_to(external, target_is_directory=True)
+    else:
+        (root / "src").mkdir(parents=True)
+        external.mkdir()
+        (root / "src" / "proofstate").symlink_to(external, target_is_directory=True)
+    monkeypatch.setattr(
+        Path,
+        "iterdir",
+        lambda _path: pytest.fail("untrusted source directory was traversed"),
+    )
+
+    with pytest.raises(DistributionError, match="source package directory"):
+        _source_files(root)
+
+
+def test_source_files_reject_symlinks_without_reading_target(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    package = tmp_path / "src" / "proofstate"
+    package.mkdir(parents=True)
+    outside = tmp_path / "outside.py"
+    outside.write_text("external = True\n", encoding="utf-8")
+    (package / "module.py").symlink_to(outside)
+    monkeypatch.setattr(
+        Path,
+        "open",
+        lambda _path, *_args, **_kwargs: pytest.fail("source symlink was read"),
+    )
+
+    with pytest.raises(DistributionError, match="non-regular entry"):
+        _source_files(tmp_path)
+
+
+def test_source_files_reject_internal_directory_symlink_before_build_traversal(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    package = tmp_path / "src" / "proofstate"
+    package.mkdir(parents=True)
+    outside = tmp_path / "outside"
+    outside.mkdir()
+    (outside / "escaped.py").write_text("external = True\n", encoding="utf-8")
+    (package / "fixtures").symlink_to(outside, target_is_directory=True)
+    monkeypatch.setattr(
+        Path,
+        "open",
+        lambda _path, *_args, **_kwargs: pytest.fail("source directory symlink target was read"),
+    )
+
+    with pytest.raises(DistributionError, match="non-regular entry"):
+        _source_files(tmp_path)
+
+
+def test_source_files_fail_closed_when_nested_directory_cannot_be_enumerated(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    package = tmp_path / "src" / "proofstate"
+    hidden = package / "hidden"
+    hidden.mkdir(parents=True)
+    (hidden / "module.py").write_text("value = 1\n", encoding="utf-8")
+    original_iterdir = Path.iterdir
+
+    def guarded_iterdir(path: Path) -> Iterator[Path]:
+        if path == hidden:
+            raise PermissionError
+        return original_iterdir(path)
+
+    monkeypatch.setattr(Path, "iterdir", guarded_iterdir)
+
+    with pytest.raises(DistributionError, match="directory could not be read"):
+        _source_files(tmp_path)
+
+
+def test_source_files_reject_matching_non_regular_entries(tmp_path: Path) -> None:
+    package = tmp_path / "src" / "proofstate"
+    package.mkdir(parents=True)
+    (package / "module.py").mkdir()
+
+    with pytest.raises(DistributionError, match="non-regular entry"):
+        _source_files(tmp_path)
+
+
+def test_source_files_normalize_read_failure(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    package = tmp_path / "src" / "proofstate"
+    package.mkdir(parents=True)
+    (package / "module.py").write_text("value = 1\n", encoding="utf-8")
+
+    def deny_read(_path: Path, *_args: object, **_kwargs: object) -> None:
+        raise PermissionError
+
+    monkeypatch.setattr(Path, "open", deny_read)
+
+    with pytest.raises(DistributionError, match="could not be read"):
+        _source_files(tmp_path)
+
+
+@pytest.mark.parametrize("filename", ["module.py", "payload.txt"])
+def test_source_files_reject_oversize_entry_before_reading(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    filename: str,
+) -> None:
+    package = tmp_path / "src" / "proofstate"
+    package.mkdir(parents=True)
+    source_path = package / filename
+    source_path.touch()
+    with source_path.open("r+b") as source:
+        source.truncate(MAX_MEMBER_BYTES + 1)
+    monkeypatch.setattr(
+        Path,
+        "open",
+        lambda _path, *_args, **_kwargs: pytest.fail("oversize source entry was read"),
+    )
+
+    with pytest.raises(DistributionError, match="entry is too large"):
+        _source_files(tmp_path)
+
+
 def test_wheel_rejects_duplicate_members(tmp_path: Path) -> None:
     wheel = tmp_path / "duplicate.whl"
     _write_wheel(wheel, duplicate=WHEEL_SOURCE_PATH)
@@ -312,3 +470,20 @@ def test_sdist_rejects_source_byte_mismatch(tmp_path: Path) -> None:
 def test_archive_paths_reject_unsafe_and_dot_segments(name: str) -> None:
     with pytest.raises(DistributionError):
         _validate_paths({name})
+
+
+def test_source_only_preflight_does_not_inspect_distribution_archives(
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    monkeypatch.setattr(distribution, "_source_files", lambda _root: {})
+    monkeypatch.setattr(
+        distribution,
+        "_single",
+        lambda _directory, _pattern: pytest.fail("archive lookup must not run"),
+    )
+    monkeypatch.setattr(sys, "argv", ["check_distribution.py", "--source-only"])
+
+    distribution.main()
+
+    assert capsys.readouterr().out == "package source preflight passed\n"

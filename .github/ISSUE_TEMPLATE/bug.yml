@@ -10,7 +10,7 @@ body:
     id: version
     attributes:
       label: ProofState version
-      placeholder: proofstate 0.3.7
+      placeholder: proofstate 0.4.0
     validations:
       required: true
   - type: textarea

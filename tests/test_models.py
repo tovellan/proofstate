@@ -132,6 +132,70 @@ def test_artifact_check_expected_value_contract(values: dict[str, object]) -> No
         ArtifactCheck.model_validate(values)
 
 
+@pytest.mark.parametrize(
+    "expected",
+    [object(), ("tuple",), {1: "non-string key"}, {"nested": [object()]}],
+)
+def test_artifact_check_rejects_non_json_expected_values(expected: object) -> None:
+    with pytest.raises(ValidationError):
+        ArtifactCheck.model_validate(
+            {"pointer": "/x", "operator": ArtifactOperator.EQUALS, "expected": expected}
+        )
+
+
+@pytest.mark.parametrize(
+    "expected",
+    [float("inf"), float("-inf"), float("nan"), {"nested": [float("inf")]}],
+)
+def test_artifact_check_rejects_non_finite_expected_values(expected: object) -> None:
+    with pytest.raises(ValidationError):
+        ArtifactCheck.model_validate(
+            {"pointer": "/x", "operator": ArtifactOperator.EQUALS, "expected": expected}
+        )
+
+
+@pytest.mark.parametrize(
+    "expected",
+    [
+        "NaN",
+        "Infinity",
+        "-Infinity",
+        "1e400",
+        '{"nested":[NaN]}',
+        '{"nested":[-1e400]}',
+    ],
+)
+def test_artifact_check_json_input_rejects_non_finite_expected_values(expected: str) -> None:
+    payload = f'{{"pointer":"/x","operator":"equals","expected":{expected}}}'
+
+    with pytest.raises(ValidationError, match="finite JSON numbers"):
+        ArtifactCheck.model_validate_json(payload)
+
+
+@pytest.mark.parametrize(
+    ("operator", "expected"),
+    [
+        (ArtifactOperator.GREATER_THAN_OR_EQUAL, True),
+        (ArtifactOperator.GREATER_THAN_OR_EQUAL, "1"),
+        (ArtifactOperator.LESS_THAN_OR_EQUAL, None),
+        (ArtifactOperator.LESS_THAN_OR_EQUAL, [1]),
+    ],
+)
+def test_numeric_artifact_checks_require_json_numbers(
+    operator: ArtifactOperator, expected: object
+) -> None:
+    with pytest.raises(ValidationError, match="expected must be a JSON number"):
+        ArtifactCheck.model_validate({"pointer": "/x", "operator": operator, "expected": expected})
+
+
+@pytest.mark.parametrize("expected", [["number"], {"type": "number"}])
+def test_type_artifact_checks_reject_non_string_values(expected: object) -> None:
+    with pytest.raises(ValidationError, match="type expected must be a JSON type name"):
+        ArtifactCheck.model_validate(
+            {"pointer": "/x", "operator": ArtifactOperator.TYPE, "expected": expected}
+        )
+
+
 def test_empty_evidence_and_invalid_dependencies_are_rejected() -> None:
     with pytest.raises(ValidationError):
         EvidenceSet()

@@ -9,6 +9,18 @@
 
 Print the scorecard JSON Schema with `proofstate schema`.
 
+## YAML input profile
+
+YAML scorecards, attestations, and artifacts use YAML 1.2 Core scalar
+resolution on PyYAML 6.x. Parsed values must be representable in JSON, mapping
+keys must be strings, numbers must be finite, and plain `<<` merge keys are
+rejected. Directives, aliases, anchors, and explicit tags are also rejected.
+Timestamp-like scalars remain strings for schema-level RFC 3339 validation.
+
+This restricted profile does not claim support for the full YAML 1.2 grammar.
+In particular, YAML 1.1 spellings such as `yes`, `0b10`, `1:20`, and `1_000`
+remain strings. See the compatibility policy for migration examples.
+
 ## Repository target
 
 `repository.identity` is the stable identifier chosen by the repository owner.
@@ -61,7 +73,10 @@ conditionals, functions, or nested classes do not pass. Function bodies are not
 traversed. ProofState does not import the module, collect pytest parameters, or
 execute the test. Symbol existence proves that a named test is represented in
 the pinned tree, not that the test passed. Pair it with a structured result
-artifact when a passing execution is required.
+artifact when a passing execution is required. Test-symbol source is limited
+to 64 KiB before AST parsing; split a larger module or use file and
+result-artifact evidence. Within one evaluation, ProofState reuses parsed
+symbol indexes for every source admitted by the cumulative work budget.
 
 ## Structured artifact evidence
 
@@ -75,20 +90,36 @@ checks:
     expected: 0
 ```
 
-Pointers follow RFC 6901. Supported operators are:
+Pointers follow RFC 6901. When traversal reaches an array, its next token must
+be `0` or a nonzero ASCII digit followed by ASCII digits. Tokens such as `01`
+and Unicode digits do not alias an array position. The same tokens remain valid
+object keys because object lookup preserves their exact decoded text.
+
+Supported operators are:
 
 | Operator | Behavior |
 | --- | --- |
 | `exists` | Pointer resolves. No `expected` field is allowed. |
-| `equals` | Value and JSON type equal `expected`. |
-| `not_equals` | Value or JSON type differs from `expected`. |
+| `equals` | Value recursively equals `expected` with exact scalar representation. |
+| `not_equals` | Value or exact scalar representation differs from `expected`. |
 | `contains` | String/list contains a value, or object contains a key. |
 | `gte` | Numeric value is at least `expected`; booleans are rejected. |
 | `lte` | Numeric value is at most `expected`; booleans are rejected. |
 | `type` | Value has JSON type `null`, `boolean`, `number`, `string`, `array`, or `object`. |
 
-List membership uses recursive type-exact comparison. Nested booleans and
-numbers do not compare as the same value.
+Equality and list membership use recursive type-exact comparison. Booleans,
+integers, and floating-point values are distinct, so `true`, `1`, and `1.0` do
+not compare as the same value. Use `gte` or `lte` when numeric comparison across
+integer and floating-point representations is intended. List-membership checks
+reuse a type-tagged structural index within one evaluation. Composite digest
+buckets confirm recursive equality, preserving correctness even if digests
+collide.
+
+An `expected` value must be JSON-compatible at every nesting level. Non-string
+mapping keys and non-finite numbers are invalid. The `gte` and `lte` operators
+require an integer or finite floating-point expectation and reject booleans and
+numeric-looking strings. Decimal integers are limited to 4,300 digits in both
+JSON and YAML.
 
 Artifacts can be JSON or the restricted YAML subset described in the
 architecture document.

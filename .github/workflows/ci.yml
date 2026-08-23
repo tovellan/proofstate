@@ -26,6 +26,10 @@ jobs:
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
+      - name: Preflight source tree
+        run: |
+          python3 scripts/check_repository.py
+          python3 scripts/check_distribution.py --source-only
       - name: Install uv and Python
         uses: astral-sh/setup-uv@20cfd1bf945f4377ade1205e4dbc17946fc9a30d # v10.0.1
         with:
@@ -53,6 +57,10 @@ jobs:
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
+      - name: Preflight source tree
+        run: |
+          python3 scripts/check_repository.py
+          python3 scripts/check_distribution.py --source-only
       - name: Install uv and Python
         uses: astral-sh/setup-uv@20cfd1bf945f4377ade1205e4dbc17946fc9a30d # v10.0.1
         with:
@@ -92,6 +100,10 @@ jobs:
         with:
           fetch-depth: 0
           persist-credentials: false
+      - name: Preflight source tree
+        run: |
+          python3 scripts/check_repository.py
+          python3 scripts/check_distribution.py --source-only
       - name: Install uv and Python
         uses: astral-sh/setup-uv@20cfd1bf945f4377ade1205e4dbc17946fc9a30d # v10.0.1
         with:
@@ -100,8 +112,6 @@ jobs:
           enable-cache: false
       - name: Install locked dependencies
         run: uv sync --locked --all-groups
-      - name: Check tracked repository content
-        run: python3 scripts/check_repository.py
       - name: Export locked runtime dependencies
         run: uv export --frozen --no-dev --no-emit-project --format requirements-txt --output-file runtime-requirements.txt
       - name: Audit runtime dependencies

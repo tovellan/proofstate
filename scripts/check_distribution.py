@@ -50,13 +50,73 @@ def _reject_duplicate_names(names: list[str], archive_kind: str) -> None:
         raise DistributionError(f"{archive_kind} contains duplicate entries: {duplicates!r}")
 
 
+def _require_source_directory(path: Path, label: str) -> None:
+    try:
+        mode = path.lstat().st_mode
+    except OSError as error:
+        raise DistributionError(
+            f"source package directory must be an existing directory: {label!r}"
+        ) from error
+    if not stat.S_ISDIR(mode):
+        raise DistributionError(
+            f"source package directory must be an existing directory: {label!r}"
+        )
+
+
 def _source_files(root: Path) -> dict[str, bytes]:
     package = root / "src" / "proofstate"
-    return {
-        path.relative_to(root).as_posix(): path.read_bytes()
-        for path in package.rglob("*")
-        if path.is_file() and (path.suffix in {".json", ".py"} or path.name == "py.typed")
-    }
+    for directory, label in (
+        (root, "."),
+        (root / "src", "src"),
+        (package, "src/proofstate"),
+    ):
+        _require_source_directory(directory, label)
+    source_files: dict[str, bytes] = {}
+    pending = [package]
+    while pending:
+        directory = pending.pop()
+        directory_label = directory.relative_to(root).as_posix()
+        try:
+            entries = sorted(directory.iterdir(), key=lambda entry: entry.name)
+        except OSError as error:
+            raise DistributionError(
+                f"source package directory could not be read: {directory_label!r}"
+            ) from error
+        for path in entries:
+            relative = path.relative_to(root).as_posix()
+            try:
+                metadata = path.lstat()
+            except OSError as error:
+                raise DistributionError(
+                    f"source package entry could not be inspected: {relative!r}"
+                ) from error
+            candidate = path.suffix in {".json", ".py", ".yaml"} or path.name == "py.typed"
+            if stat.S_ISDIR(metadata.st_mode):
+                if candidate:
+                    raise DistributionError(
+                        f"source package contains a non-regular entry: {relative!r}"
+                    )
+                pending.append(path)
+                continue
+            if not stat.S_ISREG(metadata.st_mode):
+                raise DistributionError(
+                    f"source package contains a non-regular entry: {relative!r}"
+                )
+            if metadata.st_size > MAX_MEMBER_BYTES:
+                raise DistributionError(f"source package entry is too large: {relative!r}")
+            if not candidate:
+                continue
+            try:
+                with path.open("rb") as source:
+                    content = source.read(MAX_MEMBER_BYTES + 1)
+            except OSError as error:
+                raise DistributionError(
+                    f"source package entry could not be read: {relative!r}"
+                ) from error
+            if len(content) > MAX_MEMBER_BYTES:
+                raise DistributionError(f"source package entry is too large: {relative!r}")
+            source_files[relative] = content
+    return source_files
 
 
 def _read_tar_payloads(bundle: tarfile.TarFile, members: list[tarfile.TarInfo]) -> dict[str, bytes]:
@@ -212,9 +272,13 @@ def _check_wheel(archive: Path, source_files: dict[str, bytes]) -> None:
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("directory", nargs="?", default="dist", type=Path)
+    parser.add_argument("--source-only", action="store_true")
     arguments = parser.parse_args()
     root = Path(__file__).resolve().parents[1]
     source_files = _source_files(root)
+    if arguments.source_only:
+        print("package source preflight passed")
+        return
     _check_sdist(_single(arguments.directory, "proofstate-*.tar.gz"), source_files)
     _check_wheel(_single(arguments.directory, "proofstate-*.whl"), source_files)
     print("distribution contents passed")

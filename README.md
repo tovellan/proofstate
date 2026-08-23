@@ -11,7 +11,8 @@ relationship executable and returns a machine-readable result.
 
 ## What it verifies
 
-- Versioned YAML or JSON scorecards with strict unknown-field rejection.
+- Versioned YAML or JSON scorecards with strict unknown-field rejection and
+  YAML 1.2 Core scalar semantics.
 - Full Git object IDs that resolve to an ancestor of the scorecard revision.
 - Regular-file existence and optional SHA-256 digests in the pinned tree.
 - Named pytest functions and class methods parsed from the pinned tree.
@@ -30,7 +31,7 @@ ProofState requires Python 3.11 or later and Git.
 Install the released source with `uv`:
 
 ```sh
-uv tool install git+https://github.com/tovellan/proofstate@v0.3.7
+uv tool install git+https://github.com/tovellan/proofstate@v0.4.0
 proofstate --version
 ```
 
@@ -43,7 +44,7 @@ uv sync --locked --all-groups
 uv run proofstate --version
 ```
 
-No package is published to PyPI in version 0.3.7.
+No package is published to PyPI in version 0.4.0.
 
 ## Run the complete example
 
@@ -99,10 +100,11 @@ proofstate conformance --export ./proofstate-conformance-v1alpha1
 Export refuses an existing destination, never overwrites files, and fails before
 creating output if the installed manifest or any fixture does not verify.
 
-The corpus covers valid scorecards and attestations plus strict unknown-field,
-duplicate-key, dependency-cycle, path, scope, and validity-window
-failures. Each case declares its expected classification in the installed
-manifest. The command returns status `1` if a fixture digest or outcome differs.
+The 17-case corpus covers valid scorecards and attestations plus strict
+unknown-field, duplicate-key, dependency-cycle, path, scope, validity-window,
+YAML scalar, merge-key, non-finite, and mapping-key failures. Each case declares
+its expected classification in the installed manifest. The command returns
+status `1` if a fixture digest or outcome differs.
 
 Export either versioned document schema:
 
@@ -146,6 +148,14 @@ The placeholder commit above demonstrates syntax only. A real scorecard must use
 the full object ID of a commit that exists in the repository and is an ancestor
 of the scorecard revision.
 
+YAML inputs use YAML 1.2 Core scalar resolution on PyYAML 6.x and are restricted
+to JSON-compatible values. Plain `yes` is text, `true` is a boolean, `012` is
+decimal, `0o12` is octal, and `1e3` is a number. Plain merge keys are rejected.
+YAML directives, aliases, anchors, and explicit tags are also rejected. This is
+a deliberately restricted input language, not full YAML 1.2 grammar support.
+See the [compatibility policy](docs/COMPATIBILITY.md) for the 0.4.0 migration
+table.
+
 ## Gate model
 
 Evaluation starts at `release`. Each failed or dependency-blocked assertion caps
@@ -166,7 +176,7 @@ A human attestation is a scoped declaration, not a cryptographic identity proof.
 ProofState protects its content from uncommitted mutation by loading it from the
 scorecard Git tree, and checks its time and scope. Teams that need signer
 authentication should require signed commits or add a signature-verification
-step before ProofState. Version 0.3.7 does not fetch remote evidence, execute
+step before ProofState. Version 0.4.0 does not fetch remote evidence, execute
 tests, validate commit signatures, or establish that an attested identity maps
 to a real person.
 
@@ -190,7 +200,7 @@ tracked-text checks, and a full-history secret scan when `gitleaks` is installed
 
 ## Status
 
-ProofState 0.3.7 supports local Git worktrees and SHA-1 or SHA-256 Git object
+ProofState 0.4.0 supports local Git worktrees and SHA-1 or SHA-256 Git object
 formats. The schema is `v1alpha1`: unknown fields fail validation, but compatible
 additive evolution is not promised until a stable schema is released.
 

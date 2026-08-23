@@ -1,0 +1,28 @@
+schema_version: proofstate.dev/scorecard/v1alpha1
+repository:
+  identity: yes
+  commit: "0000000000000000000000000000000000000000"
+settings:
+  max_evidence_bytes: 08
+assertions:
+  - id: core-scalars
+    title: YAML 1.2 Core numeric scalars are accepted
+    severity: high
+    evidence:
+      machine:
+        - type: artifact
+          path: evidence/result.yaml
+          format: yaml
+          checks:
+            - pointer: /exponent
+              operator: gte
+              expected: 1e3
+            - pointer: /leading-decimal
+              operator: gte
+              expected: .5
+            - pointer: /octal
+              operator: gte
+              expected: 0o7
+            - pointer: /hexadecimal
+              operator: gte
+              expected: 0x3A

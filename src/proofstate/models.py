@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import math
 import re
 from collections import deque
 from datetime import datetime
@@ -13,6 +14,7 @@ from pydantic import (
     BaseModel,
     ConfigDict,
     Field,
+    JsonValue,
     StringConstraints,
     field_validator,
     model_validator,
@@ -27,7 +29,7 @@ RFC3339_TIMESTAMP = re.compile(
 
 
 class StrictModel(BaseModel):
-    model_config = ConfigDict(extra="forbid", strict=True)
+    model_config = ConfigDict(extra="forbid", strict=True, allow_inf_nan=False)
 
 
 def validate_repository_path(value: str) -> str:
@@ -113,7 +115,7 @@ class ArtifactOperator(StrEnum):
 class ArtifactCheck(StrictModel):
     pointer: str
     operator: Annotated[ArtifactOperator, Field(strict=False)]
-    expected: Any = None
+    expected: JsonValue = None
 
     @field_validator("pointer")
     @classmethod
@@ -132,14 +134,32 @@ class ArtifactCheck(StrictModel):
             raise ValueError("exists checks cannot set expected")
         if self.operator != ArtifactOperator.EXISTS and not supplied:
             raise ValueError(f"{self.operator.value} checks require expected")
-        if self.operator == ArtifactOperator.TYPE and self.expected not in {
-            "null",
-            "boolean",
-            "number",
-            "string",
-            "array",
-            "object",
-        }:
+        pending: list[JsonValue] = [self.expected]
+        while pending:
+            value = pending.pop()
+            if type(value) is float and not math.isfinite(value):
+                raise ValueError("expected must contain only finite JSON numbers")
+            if isinstance(value, list):
+                pending.extend(value)
+            elif isinstance(value, dict):
+                pending.extend(value.values())
+        if self.operator in {
+            ArtifactOperator.GREATER_THAN_OR_EQUAL,
+            ArtifactOperator.LESS_THAN_OR_EQUAL,
+        } and type(self.expected) not in {int, float}:
+            raise ValueError(f"{self.operator.value} expected must be a JSON number")
+        if self.operator == ArtifactOperator.TYPE and (
+            not isinstance(self.expected, str)
+            or self.expected
+            not in {
+                "null",
+                "boolean",
+                "number",
+                "string",
+                "array",
+                "object",
+            }
+        ):
             raise ValueError("type expected must be a JSON type name")
         return self
 

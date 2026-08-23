@@ -72,6 +72,11 @@ def _print_json(value: object) -> None:
     print(json.dumps(value, indent=2, sort_keys=True, default=str))
 
 
+def _console_text(value: str, *, stream: object = sys.stdout) -> str:
+    encoding = getattr(stream, "encoding", None) or "utf-8"
+    return value.encode(encoding, errors="backslashreplace").decode(encoding)
+
+
 def _print_text(result: Evaluation) -> None:
     verdict = "PASS" if result.passed else "FAIL"
     print(
@@ -80,8 +85,10 @@ def _print_text(result: Evaluation) -> None:
     )
     for assertion in result.assertions:
         print(
-            f"[{assertion.status.upper():7}] {assertion.assertion_id} "
-            f"severity={assertion.severity} cap={assertion.failure_cap}"
+            _console_text(
+                f"[{assertion.status.upper():7}] {assertion.assertion_id} "
+                f"severity={assertion.severity} cap={assertion.failure_cap}"
+            )
         )
         for evidence in assertion.evidence:
             print(f"  {evidence.code.value} {evidence.message}")
@@ -105,7 +112,10 @@ def _fail(error: ProofStateError, output_format: str) -> NoReturn:
     if output_format == "json":
         _print_json(payload)
     else:
-        print(f"{error.code.value}: {error.message}", file=sys.stderr)
+        print(
+            _console_text(f"{error.code.value}: {error.message}", stream=sys.stderr),
+            file=sys.stderr,
+        )
     raise SystemExit(2)
 
 

@@ -1,0 +1,14 @@
+schema_version: proofstate.dev/scorecard/v1alpha1
+repository:
+  identity: example.invalid/widget
+  commit: "0000000000000000000000000000000000000000"
+<<:
+  assertions: []
+assertions:
+  - id: merge-key
+    title: Plain merge keys are rejected
+    severity: high
+    evidence:
+      machine:
+        - type: file
+          path: README.md

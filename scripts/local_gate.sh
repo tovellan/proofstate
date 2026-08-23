@@ -19,6 +19,8 @@ cleanup() {
 }
 trap cleanup EXIT
 
+python3 scripts/check_repository.py
+python3 scripts/check_distribution.py --source-only
 uv sync --locked --all-groups
 uv run ruff format --check .
 uv run ruff check .
@@ -57,7 +59,6 @@ uv pip install --python "$gate_tmp/sdist-venv/bin/python" "$sdist"
 "$gate_tmp/sdist-venv/bin/proofstate" conformance --export "$gate_tmp/sdist-conformance"
 "$gate_tmp/sdist-venv/bin/python" examples/basic/run.py
 
-python3 scripts/check_repository.py
 git diff --check
 gitleaks git --redact --no-banner .
 
