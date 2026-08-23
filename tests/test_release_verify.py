@@ -69,6 +69,9 @@ def test_release_workflow_binds_and_attests_exact_artifacts() -> None:
     )
     job = workflow["jobs"]["release"]
 
+    assert job["if"] == "${{ inputs.confirm }}"
+    assert job["runs-on"] == "ubuntu-latest"
+    assert job["env"] == {"RELEASE_TAG": "${{ inputs.tag }}"}
     assert job["permissions"] == {
         "contents": "write",
         "id-token": "write",
@@ -91,6 +94,7 @@ def test_release_workflow_binds_and_attests_exact_artifacts() -> None:
     }:
         critical_step = steps[names.index(critical_name)]
         assert "continue-on-error" not in critical_step
+        assert "if" not in critical_step
         assert "shell" not in critical_step
 
     assert checkout["uses"] == ("actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1")
