@@ -13,7 +13,7 @@ build:
 	uv build
 
 audit:
-	uv export --frozen --no-dev --no-emit-project --format requirements-txt | uv run pip-audit --requirement -
+	uv export --quiet --frozen --no-dev --no-emit-project --format requirements-txt | uv run pip-audit --requirement - --no-deps --disable-pip
 
 example:
 	uv run python examples/basic/run.py

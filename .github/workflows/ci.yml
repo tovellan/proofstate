@@ -97,4 +97,4 @@ jobs:
       - name: Export locked runtime dependencies
         run: uv export --frozen --no-dev --no-emit-project --format requirements-txt --output-file runtime-requirements.txt
       - name: Audit runtime dependencies
-        run: uv run pip-audit --requirement runtime-requirements.txt
+        run: uv run pip-audit --requirement runtime-requirements.txt --no-deps --disable-pip

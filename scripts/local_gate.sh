@@ -26,13 +26,16 @@ uv run mypy src/proofstate tests
 uv run pytest --cov=proofstate --cov-report=term-missing
 uv build
 
-uv export \
+uv export --quiet \
   --frozen \
   --no-dev \
   --no-emit-project \
   --format requirements-txt \
   --output-file "$gate_tmp/requirements.txt"
-uv run pip-audit --requirement "$gate_tmp/requirements.txt"
+uv run pip-audit \
+  --requirement "$gate_tmp/requirements.txt" \
+  --no-deps \
+  --disable-pip
 
 wheel=$(find dist -maxdepth 1 -type f -name 'proofstate-*.whl' -print -quit)
 test -n "$wheel"
