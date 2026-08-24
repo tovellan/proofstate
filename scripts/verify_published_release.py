@@ -27,44 +27,22 @@ def _mapping(value: object) -> Mapping[str, Any]:
     return value if isinstance(value, Mapping) else {}
 
 
-def verify_published_release(
-    release: object,
-    attestation: object,
+def verify_remote_tag(
     tag_ref: object,
     tag_object: object,
     *,
     tag: str,
     tag_object_id: str,
     commit: str,
-    repository: str,
-    dist: Path,
 ) -> list[str]:
-    failures: list[str] = []
     version = tag.removeprefix("v")
     if tag != f"v{version}" or SEMVER.fullmatch(version) is None:
-        return ["published release tag is not a plain semantic version"]
+        return ["release tag is not a plain semantic version"]
     for label, object_id in (("tag object", tag_object_id), ("commit", commit)):
         if len(object_id) != 40 or any(
             character not in "0123456789abcdef" for character in object_id
         ):
-            return [f"published release {label} is not a full lowercase SHA-1 object ID"]
-
-    wheel = dist / f"proofstate-{version}-py3-none-any.whl"
-    sdist = dist / f"proofstate-{version}.tar.gz"
-    expected_files = {path.name: path for path in (wheel, sdist)}
-    if not all(path.is_file() for path in expected_files.values()):
-        return ["published release distributions are missing"]
-    expected_digests = {name: _sha256(path) for name, path in expected_files.items()}
-
-    release_data = _mapping(release)
-    if (
-        release_data.get("tag_name") != tag
-        or release_data.get("name") != f"ProofState {version}"
-        or release_data.get("draft") is not False
-        or release_data.get("prerelease") is not False
-        or release_data.get("immutable") is not True
-    ):
-        failures.append("GitHub release identity or immutable state does not match")
+            return [f"release {label} is not a full lowercase SHA-1 object ID"]
 
     ref_data = _mapping(tag_ref)
     ref_object = _mapping(ref_data.get("object"))
@@ -83,7 +61,55 @@ def verify_published_release(
         or remote_target.get("type") != "commit"
         or remote_target.get("sha") != commit
     ):
-        failures.append("remote annotated tag does not match the release contract")
+        return ["remote annotated tag does not match the release contract"]
+    return []
+
+
+def verify_published_release(
+    release: object,
+    attestation: object,
+    tag_ref: object,
+    tag_object: object,
+    *,
+    tag: str,
+    tag_object_id: str,
+    commit: str,
+    repository: str,
+    dist: Path,
+) -> list[str]:
+    failures: list[str] = []
+    version = tag.removeprefix("v")
+    if tag != f"v{version}" or SEMVER.fullmatch(version) is None:
+        return ["published release tag is not a plain semantic version"]
+    failures.extend(
+        verify_remote_tag(
+            tag_ref,
+            tag_object,
+            tag=tag,
+            tag_object_id=tag_object_id,
+            commit=commit,
+        )
+    )
+    if failures:
+        return failures
+
+    wheel = dist / f"proofstate-{version}-py3-none-any.whl"
+    sdist = dist / f"proofstate-{version}.tar.gz"
+    expected_files = {path.name: path for path in (wheel, sdist)}
+    if not all(path.is_file() for path in expected_files.values()):
+        return ["published release distributions are missing"]
+    expected_digests = {name: _sha256(path) for name, path in expected_files.items()}
+
+    release_data = _mapping(release)
+    if (
+        release_data.get("tag_name") != tag
+        or release_data.get("name") != f"ProofState {version}"
+        or release_data.get("draft") is not False
+        or release_data.get("prerelease") is not False
+        or release_data.get("immutable") is not True
+    ):
+        failures.append("GitHub release identity or immutable state does not match")
+
     assets = release_data.get("assets")
     asset_data: dict[str, Mapping[str, Any]] = {}
     if isinstance(assets, list):
@@ -145,20 +171,44 @@ def verify_published_release(
 
 def main() -> None:
     parser = argparse.ArgumentParser()
-    parser.add_argument("--release-json", type=Path, required=True)
-    parser.add_argument("--attestation-json", type=Path, required=True)
+    parser.add_argument("--release-json", type=Path)
+    parser.add_argument("--attestation-json", type=Path)
     parser.add_argument("--tag-ref-json", type=Path, required=True)
     parser.add_argument("--tag-object-json", type=Path, required=True)
     parser.add_argument("--tag", required=True)
     parser.add_argument("--tag-object", required=True)
     parser.add_argument("--commit", required=True)
-    parser.add_argument("--repository", required=True)
-    parser.add_argument("--dist", type=Path, required=True)
+    parser.add_argument("--repository")
+    parser.add_argument("--dist", type=Path)
+    parser.add_argument("--remote-tag-only", action="store_true")
     arguments = parser.parse_args()
-    release = json.loads(arguments.release_json.read_text(encoding="utf-8"))
-    attestation = json.loads(arguments.attestation_json.read_text(encoding="utf-8"))
     tag_ref = json.loads(arguments.tag_ref_json.read_text(encoding="utf-8"))
     tag_object = json.loads(arguments.tag_object_json.read_text(encoding="utf-8"))
+    if arguments.remote_tag_only:
+        failures = verify_remote_tag(
+            tag_ref,
+            tag_object,
+            tag=arguments.tag,
+            tag_object_id=arguments.tag_object,
+            commit=arguments.commit,
+        )
+        if failures:
+            for failure in failures:
+                print(failure)
+            raise SystemExit(1)
+        print(f"remote annotated tag agrees with {arguments.tag}")
+        return
+    if (
+        arguments.release_json is None
+        or arguments.attestation_json is None
+        or arguments.repository is None
+        or arguments.dist is None
+    ):
+        parser.error(
+            "post-publication verification requires release, attestation, repository, and dist"
+        )
+    release = json.loads(arguments.release_json.read_text(encoding="utf-8"))
+    attestation = json.loads(arguments.attestation_json.read_text(encoding="utf-8"))
     failures = verify_published_release(
         release,
         attestation,

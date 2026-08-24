@@ -175,9 +175,14 @@ def test_release_workflow_binds_and_attests_exact_artifacts() -> None:
     assert 'gh release create "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" \\\n' in release
     assert "  --draft" in release
     assert 'gh release upload "$RELEASE_TAG" "$wheel" "$sdist"' in release
+    assert "--remote-tag-only" in release
+    assert release.index("--remote-tag-only") < release.index("--draft=false")
     assert 'gh release edit "$RELEASE_TAG" --draft=false' in release
     assert 'gh release verify "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY"' in published
     assert 'gh release verify-asset "$RELEASE_TAG" "$wheel"' in published
     assert 'gh release verify-asset "$RELEASE_TAG" "$sdist"' in published
+    assert "gh attestation verify" in published
+    assert "--predicate-type https://slsa.dev/provenance/v1" in published
+    assert '--source-digest "$GITHUB_SHA"' in published
     assert "scripts/verify_published_release.py" in published
     assert "Administration" not in published

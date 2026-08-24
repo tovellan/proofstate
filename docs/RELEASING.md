@@ -19,10 +19,11 @@ Administration access and does not attempt to read the organization setting.
 
 The workflow verifies exact archive membership and source-byte parity, then
 clean-installs and exercises both the wheel and source archive. It records SLSA
-build provenance, creates a draft, attaches both distributions, and publishes
-the draft. After publication it requires GitHub to report the release immutable
-and cryptographically verifies GitHub's automatic release attestation against
-the exact tag, commit, asset names, sizes, and SHA-256 digests. Provenance
+build provenance, creates a draft, attaches both distributions, and rechecks
+the remote annotated tag before publishing the draft. After publication it
+requires GitHub to report the release immutable and cryptographically verifies
+both the explicit build provenance and GitHub's automatic release attestation
+against the exact tag, commit, asset names, sizes, and SHA-256 digests. Provenance
 records are public through GitHub's attestation store and the Sigstore
 transparency log. They establish artifact origin and workflow identity, not
 reproducibility or artifact safety.

@@ -3,7 +3,7 @@ from __future__ import annotations
 import hashlib
 from pathlib import Path
 
-from scripts.verify_published_release import verify_published_release
+from scripts.verify_published_release import verify_published_release, verify_remote_tag
 
 
 def _records(
@@ -122,3 +122,22 @@ def test_published_release_rejects_drift_and_non_github_attestation(tmp_path: Pa
 
     assert "GitHub release identity or immutable state does not match" in failures
     assert "release attestation was not signed by GitHub's release service" in failures
+
+
+def test_remote_tag_check_rejects_a_moved_tag(tmp_path: Path) -> None:
+    dist = tmp_path / "dist"
+    dist.mkdir()
+    (dist / "proofstate-0.4.0-py3-none-any.whl").write_bytes(b"wheel")
+    (dist / "proofstate-0.4.0.tar.gz").write_bytes(b"sdist")
+    _, _, tag_ref, tag_object = _records(dist)
+    target = tag_object["object"]
+    assert isinstance(target, dict)
+    target["sha"] = "c" * 40
+
+    assert verify_remote_tag(
+        tag_ref,
+        tag_object,
+        tag="v0.4.0",
+        tag_object_id="b" * 40,
+        commit="a" * 40,
+    ) == ["remote annotated tag does not match the release contract"]

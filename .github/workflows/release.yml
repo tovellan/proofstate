@@ -98,6 +98,9 @@ jobs:
           test -f "$notes"
           test -f "$wheel"
           test -f "$sdist"
+          tag_object="$(git rev-parse "refs/tags/$RELEASE_TAG")"
+          tag_ref_json="$RUNNER_TEMP/proofstate-prepublish-tag-ref.json"
+          tag_object_json="$RUNNER_TEMP/proofstate-prepublish-tag-object.json"
           gh release create "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" \
             --draft \
             --verify-tag \
@@ -105,6 +108,15 @@ jobs:
             --notes-file "$notes"
           gh release upload "$RELEASE_TAG" "$wheel" "$sdist" \
             --repo "$GITHUB_REPOSITORY"
+          gh api "repos/$GITHUB_REPOSITORY/git/ref/tags/$RELEASE_TAG" > "$tag_ref_json"
+          gh api "repos/$GITHUB_REPOSITORY/git/tags/$tag_object" > "$tag_object_json"
+          python3 scripts/verify_published_release.py \
+            --tag-ref-json "$tag_ref_json" \
+            --tag-object-json "$tag_object_json" \
+            --tag "$RELEASE_TAG" \
+            --tag-object "$tag_object" \
+            --commit "$GITHUB_SHA" \
+            --remote-tag-only
           gh release edit "$RELEASE_TAG" --draft=false \
             --repo "$GITHUB_REPOSITORY"
       - name: Verify immutable release and automatic attestation
@@ -134,6 +146,15 @@ jobs:
             --repo "$GITHUB_REPOSITORY"
           gh release verify-asset "$RELEASE_TAG" "$sdist" \
             --repo "$GITHUB_REPOSITORY"
+          for artifact in "$wheel" "$sdist"; do
+            gh attestation verify "$artifact" \
+              --repo "$GITHUB_REPOSITORY" \
+              --predicate-type https://slsa.dev/provenance/v1 \
+              --signer-workflow "$GITHUB_REPOSITORY/.github/workflows/release.yml" \
+              --source-ref refs/heads/main \
+              --source-digest "$GITHUB_SHA" \
+              --limit 5
+          done
           python3 scripts/verify_published_release.py \
             --release-json "$release_json" \
             --attestation-json "$attestation_json" \
