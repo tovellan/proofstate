@@ -75,7 +75,8 @@ passing.
   trusted CI mechanism when producer identity matters.
 - A named test symbol proves presence, not collection or successful execution.
 - ProofState does not fetch missing Git objects and may fail in shallow or
-  partial clones.
+  partial clones. The exact full, shallow, and blob-filtered behavior is
+  recorded in [performance and clone constraints](../PERFORMANCE.md).
 - Repository and distribution gates assume the checked-out source tree is not
   concurrently mutated while they inspect it.
 - Denial of service below configured size and count limits is reduced but not
@@ -84,3 +85,7 @@ passing.
 For cryptographic supply-chain attestations, use a system designed for signing
 and provenance, then reference its bounded verification result as a ProofState
 artifact.
+
+The [authenticated-attestation design evaluation](AUTHENTICATED_ATTESTATIONS.md)
+records the trust-root, revocation, offline-verification, and schema gates that
+must be satisfied before ProofState itself can add an optional signature layer.

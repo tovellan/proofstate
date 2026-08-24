@@ -1,0 +1,23 @@
+{
+  "assertions": [
+    {
+      "evidence": {
+        "attestations": [],
+        "machine": [
+          {
+            "path": "README.md",
+            "type": "file"
+          }
+        ]
+      },
+      "id": "source-present",
+      "severity": "high",
+      "title": "Source is present"
+    }
+  ],
+  "repository": {
+    "commit": "000000000000000000000000000000000000000",
+    "identity": "example.invalid/widget"
+  },
+  "schema_version": "proofstate.dev/scorecard/v1alpha1"
+}

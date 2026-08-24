@@ -53,7 +53,7 @@ def test_cli_conformance_is_machine_readable(capsys: pytest.CaptureFixture[str])
     main(["conformance", "--format", "json"])
     payload = json.loads(capsys.readouterr().out)
     assert payload["passed"] is True
-    assert len(payload["cases"]) == 17
+    assert len(payload["cases"]) == 64
 
 
 def test_cli_conformance_normalizes_fixture_permission_error(

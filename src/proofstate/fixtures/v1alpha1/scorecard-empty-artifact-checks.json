@@ -1,0 +1,25 @@
+{
+  "assertions": [
+    {
+      "evidence": {
+        "attestations": [],
+        "machine": [
+          {
+            "checks": [],
+            "format": "json",
+            "path": "result.json",
+            "type": "artifact"
+          }
+        ]
+      },
+      "id": "source-present",
+      "severity": "high",
+      "title": "Source is present"
+    }
+  ],
+  "repository": {
+    "commit": "0000000000000000000000000000000000000000",
+    "identity": "example.invalid/widget"
+  },
+  "schema_version": "proofstate.dev/scorecard/v1alpha1"
+}

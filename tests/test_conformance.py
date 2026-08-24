@@ -24,7 +24,7 @@ def test_installed_conformance_bundle_passes() -> None:
     result = run_conformance(fixture_root())
 
     assert result.passed is True
-    assert len(result.cases) == 17
+    assert len(result.cases) == 64
     assert {case.observed for case in result.cases} == {
         "valid",
         "invalid_document",
@@ -99,9 +99,33 @@ def test_conformance_bundle_normalizes_fixture_permission_error(
 
 def test_conformance_result_is_portable_json() -> None:
     payload = json.loads(json.dumps(run_conformance(fixture_root()).to_dict()))
+    expected = json.loads((fixture_root() / "expected-results.json").read_text(encoding="utf-8"))
 
     assert payload["schema_version"] == "proofstate.dev/conformance-result/v1alpha1"
-    assert payload["fixture_schema_version"] == ("proofstate.dev/conformance-manifest/v1alpha1")
+    assert payload["fixture_schema_version"] == ("proofstate.dev/conformance-manifest/v1alpha2")
+    assert payload == expected
+
+
+def test_conformance_bundle_fails_on_tampered_expected_results(tmp_path: Path) -> None:
+    copied = tmp_path / "fixtures"
+    shutil.copytree(fixture_root(), copied)
+    target = copied / "expected-results.json"
+    target.write_text(target.read_text() + "\n", encoding="utf-8")
+
+    result = run_conformance(copied)
+
+    assert result.passed is False
+    assert result.cases[0].observed == "invalid_manifest"
+
+
+def test_conformance_bundle_matches_generator() -> None:
+    from scripts.generate_conformance import render_bundle
+
+    rendered = render_bundle()
+
+    assert {path.name for path in fixture_root().iterdir()} == set(rendered)
+    for name, content in rendered.items():
+        assert (fixture_root() / name).read_bytes() == content
 
 
 def test_conformance_export_preserves_exact_verified_files(tmp_path: Path) -> None:

@@ -1,0 +1,14 @@
+{
+  "expires_at": "2026-08-25T00:00:00Z",
+  "identity": "release-reviewer",
+  "issued_at": "2026-08-24T00:00:00Z",
+  "schema_version": "proofstate.dev/attestation/v1alpha1",
+  "scope": {
+    "assertions": [
+      "source-present"
+    ],
+    "commit": "0000000000000000000000000000000000000000",
+    "repository": "rrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrr"
+  },
+  "statement": "The scoped assertion was reviewed."
+}

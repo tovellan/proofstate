@@ -3,6 +3,7 @@
 preflight:
 	python3 scripts/check_repository.py
 	python3 scripts/check_distribution.py --source-only
+	python3 scripts/generate_conformance.py --check
 
 lint: preflight
 	uv run ruff format --check .

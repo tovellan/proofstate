@@ -15,7 +15,7 @@ from proofstate.document import DocumentError, load_document
 from proofstate.models import HumanAttestation, Identifier, Scorecard, Sha256
 
 CONFORMANCE_MAX_BYTES = 1_048_576
-CONFORMANCE_SCHEMA_VERSION = "proofstate.dev/conformance-manifest/v1alpha1"
+CONFORMANCE_SCHEMA_VERSION = "proofstate.dev/conformance-manifest/v1alpha2"
 
 
 class _StrictModel(BaseModel):
@@ -42,8 +42,14 @@ class _Case(_StrictModel):
         return value
 
 
+class _ExpectedResultsFile(_StrictModel):
+    path: Literal["expected-results.json"]
+    sha256: Sha256
+
+
 class _Manifest(_StrictModel):
-    schema_version: Literal["proofstate.dev/conformance-manifest/v1alpha1"]
+    schema_version: Literal["proofstate.dev/conformance-manifest/v1alpha2"]
+    expected_results: _ExpectedResultsFile
     cases: list[_Case] = Field(min_length=1, max_length=100)
 
     @model_validator(mode="after")
@@ -55,6 +61,30 @@ class _Manifest(_StrictModel):
         if len(paths) != len(set(paths)):
             raise ValueError("conformance fixture paths must be unique")
         return self
+
+
+class _ExpectedCase(_StrictModel):
+    id: Identifier
+    expected: Literal[
+        "valid",
+        "invalid_document",
+        "invalid_scorecard",
+        "invalid_attestation",
+    ]
+    observed: Literal[
+        "valid",
+        "invalid_document",
+        "invalid_scorecard",
+        "invalid_attestation",
+    ]
+    passed: Literal[True]
+
+
+class _ExpectedResults(_StrictModel):
+    schema_version: Literal["proofstate.dev/conformance-result/v1alpha1"]
+    passed: Literal[True]
+    fixture_schema_version: Literal["proofstate.dev/conformance-manifest/v1alpha2"]
+    cases: list[_ExpectedCase] = Field(min_length=1, max_length=100)
 
 
 @dataclass(frozen=True, slots=True)
@@ -108,6 +138,21 @@ def _load_manifest(root: Traversable) -> _Manifest:
         raise ValueError("installed conformance manifest is invalid") from error
 
 
+def _load_expected_results(root: Traversable, manifest: _Manifest) -> _ExpectedResults:
+    content = _read_bounded(root.joinpath(manifest.expected_results.path))
+    if hashlib.sha256(content).hexdigest() != manifest.expected_results.sha256:
+        raise ValueError("installed conformance expected results have an invalid digest")
+    try:
+        expected = _ExpectedResults.model_validate(load_document(content, format_hint="json"))
+    except (DocumentError, ValidationError) as error:
+        raise ValueError("installed conformance expected results are invalid") from error
+    declared = [(case.id, case.expected, case.expected, True) for case in manifest.cases]
+    recorded = [(case.id, case.expected, case.observed, case.passed) for case in expected.cases]
+    if recorded != declared:
+        raise ValueError("installed conformance expected results disagree with the manifest")
+    return expected
+
+
 def _observe(document_kind: str, content: bytes) -> str:
     try:
         document = load_document(content)
@@ -129,6 +174,7 @@ def run_conformance(root: Traversable | None = None) -> ConformanceResult:
     fixture_root = root or _fixture_root()
     try:
         manifest = _load_manifest(fixture_root)
+        _load_expected_results(fixture_root, manifest)
     except (OSError, ValueError):
         failed_manifest = ConformanceCaseResult(
             case_id="manifest",
@@ -178,7 +224,13 @@ def export_conformance(
     if not result.passed:
         raise ValueError("conformance bundle must pass before export")
     manifest = _load_manifest(fixture_root)
-    payloads = {"manifest.json": _read_bounded(fixture_root.joinpath("manifest.json"))}
+    _load_expected_results(fixture_root, manifest)
+    payloads = {
+        "manifest.json": _read_bounded(fixture_root.joinpath("manifest.json")),
+        manifest.expected_results.path: _read_bounded(
+            fixture_root.joinpath(manifest.expected_results.path)
+        ),
+    }
     for case in manifest.cases:
         content = _read_bounded(fixture_root.joinpath(case.path))
         if hashlib.sha256(content).hexdigest() != case.sha256:

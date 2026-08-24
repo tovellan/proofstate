@@ -1,8 +1,43 @@
 {
-  "schema_version": "proofstate.dev/scorecard/v1alpha1",
-  "repository": {"identity": "example.invalid/widget", "commit": "0000000000000000000000000000000000000000"},
   "assertions": [
-    {"id":"first","title":"First","severity":"high","depends_on":["second"],"evidence":{"machine":[{"type":"file","path":"README.md"}]}},
-    {"id":"second","title":"Second","severity":"high","depends_on":["first"],"evidence":{"machine":[{"type":"file","path":"LICENSE"}]}}
-  ]
+    {
+      "depends_on": [
+        "second"
+      ],
+      "evidence": {
+        "attestations": [],
+        "machine": [
+          {
+            "path": "README.md",
+            "type": "file"
+          }
+        ]
+      },
+      "id": "first",
+      "severity": "high",
+      "title": "Source is present"
+    },
+    {
+      "depends_on": [
+        "first"
+      ],
+      "evidence": {
+        "attestations": [],
+        "machine": [
+          {
+            "path": "README.md",
+            "type": "file"
+          }
+        ]
+      },
+      "id": "second",
+      "severity": "high",
+      "title": "Source is present"
+    }
+  ],
+  "repository": {
+    "commit": "0000000000000000000000000000000000000000",
+    "identity": "example.invalid/widget"
+  },
+  "schema_version": "proofstate.dev/scorecard/v1alpha1"
 }

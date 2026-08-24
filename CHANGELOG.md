@@ -5,6 +5,15 @@ versions follow Semantic Versioning.
 
 ## [Unreleased]
 
+### Added
+
+- Added `conformance-manifest/v1alpha2` with 64 generated document cases, a
+  digest-pinned exact expected-result artifact, and a schema-rule coverage map.
+- Published a reproducible scale and clone-constraint harness plus one measured
+  assertion-graph and Git-history result.
+- Documented the trust-root, revocation, offline-verification, and schema gates
+  required before optional authenticated human attestations can be implemented.
+
 ## [0.4.0] - 2026-08-24
 
 ### Changed

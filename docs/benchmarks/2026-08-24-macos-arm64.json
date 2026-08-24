@@ -1,0 +1,104 @@
+{
+  "cases": [
+    {
+      "assertions": 100,
+      "evidence_commit": "dcdec5861a538abbb13cd9a50263e5975ee87cc5",
+      "intermediate_history_commits": 0,
+      "maximum_seconds": 0.10809558304026723,
+      "median_seconds": 0.10472079098690301,
+      "minimum_seconds": 0.10449333395808935,
+      "passed": true,
+      "policy_commit": "29b374e397dce94d0d9788299795b42acf927863",
+      "repetitions": 5,
+      "scorecard_bytes": 36168
+    },
+    {
+      "assertions": 500,
+      "evidence_commit": "dcdec5861a538abbb13cd9a50263e5975ee87cc5",
+      "intermediate_history_commits": 0,
+      "maximum_seconds": 0.32646112493239343,
+      "median_seconds": 0.3204607500229031,
+      "minimum_seconds": 0.31917849997989833,
+      "passed": true,
+      "policy_commit": "c2b3df72e19d23d83494e0d3a583e817742a192e",
+      "repetitions": 5,
+      "scorecard_bytes": 180568
+    },
+    {
+      "assertions": 1000,
+      "evidence_commit": "dcdec5861a538abbb13cd9a50263e5975ee87cc5",
+      "intermediate_history_commits": 0,
+      "maximum_seconds": 0.5953487500082701,
+      "median_seconds": 0.5886757919797674,
+      "minimum_seconds": 0.5831086660036817,
+      "passed": true,
+      "policy_commit": "f5918cccf383bf7bcacbf447db81c1a47f2d52aa",
+      "repetitions": 5,
+      "scorecard_bytes": 361068
+    },
+    {
+      "assertions": 1,
+      "evidence_commit": "dcdec5861a538abbb13cd9a50263e5975ee87cc5",
+      "intermediate_history_commits": 100,
+      "maximum_seconds": 0.05983979196753353,
+      "median_seconds": 0.058316375012509525,
+      "minimum_seconds": 0.057052999967709184,
+      "passed": true,
+      "policy_commit": "57a1eba15a5e09aa03590ca79fca0665550f0b3c",
+      "repetitions": 5,
+      "scorecard_bytes": 537
+    },
+    {
+      "assertions": 1,
+      "evidence_commit": "dcdec5861a538abbb13cd9a50263e5975ee87cc5",
+      "intermediate_history_commits": 1000,
+      "maximum_seconds": 0.07810620800592005,
+      "median_seconds": 0.07704466709401459,
+      "minimum_seconds": 0.0761944999685511,
+      "passed": true,
+      "policy_commit": "457c36669f3b16c3f44def5dfc6ca151e54f4208",
+      "repetitions": 5,
+      "scorecard_bytes": 537
+    }
+  ],
+  "clone_constraints": {
+    "evidence_commit": "dcdec5861a538abbb13cd9a50263e5975ee87cc5",
+    "full": {
+      "outcome": "pass"
+    },
+    "partial": {
+      "evidence_codes": [
+        "PSE900_INTERNAL_ERROR"
+      ],
+      "outcome": "fail"
+    },
+    "policy_commit": "4f35e9ed753d14f0d1f60a28fbedbc8b5611a2e0",
+    "shallow": {
+      "code": "PS008_UNRESOLVABLE_COMMIT",
+      "outcome": "error"
+    }
+  },
+  "environment": {
+    "git": "git version 2.52.0",
+    "implementation": "CPython",
+    "machine": "arm64",
+    "python": "3.11.14",
+    "system": "Darwin"
+  },
+  "inputs": {
+    "assertion_counts": [
+      100,
+      500,
+      1000
+    ],
+    "dependency_shape": "linear-chain",
+    "evaluated_at": "2026-08-24T00:00:00+00:00",
+    "evidence_bytes": 27,
+    "history_depths": [
+      100,
+      1000
+    ],
+    "repetitions": 5
+  },
+  "schema_version": "proofstate.dev/benchmark-result/v1alpha1"
+}

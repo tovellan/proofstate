@@ -1,0 +1,391 @@
+{
+  "cases": [
+    {
+      "expected": "valid",
+      "id": "scorecard-valid-minimal",
+      "observed": "valid",
+      "passed": true
+    },
+    {
+      "expected": "valid",
+      "id": "scorecard-valid-complete",
+      "observed": "valid",
+      "passed": true
+    },
+    {
+      "expected": "invalid_scorecard",
+      "id": "scorecard-unknown-field",
+      "observed": "invalid_scorecard",
+      "passed": true
+    },
+    {
+      "expected": "invalid_scorecard",
+      "id": "scorecard-invalid-schema-version",
+      "observed": "invalid_scorecard",
+      "passed": true
+    },
+    {
+      "expected": "invalid_scorecard",
+      "id": "scorecard-empty-repository-identity",
+      "observed": "invalid_scorecard",
+      "passed": true
+    },
+    {
+      "expected": "invalid_scorecard",
+      "id": "scorecard-long-repository-identity",
+      "observed": "invalid_scorecard",
+      "passed": true
+    },
+    {
+      "expected": "invalid_scorecard",
+      "id": "scorecard-invalid-commit",
+      "observed": "invalid_scorecard",
+      "passed": true
+    },
+    {
+      "expected": "invalid_scorecard",
+      "id": "scorecard-settings-below-minimum",
+      "observed": "invalid_scorecard",
+      "passed": true
+    },
+    {
+      "expected": "invalid_scorecard",
+      "id": "scorecard-settings-above-maximum",
+      "observed": "invalid_scorecard",
+      "passed": true
+    },
+    {
+      "expected": "invalid_scorecard",
+      "id": "scorecard-empty-assertions",
+      "observed": "invalid_scorecard",
+      "passed": true
+    },
+    {
+      "expected": "invalid_scorecard",
+      "id": "scorecard-too-many-assertions",
+      "observed": "invalid_scorecard",
+      "passed": true
+    },
+    {
+      "expected": "invalid_scorecard",
+      "id": "scorecard-invalid-assertion-id",
+      "observed": "invalid_scorecard",
+      "passed": true
+    },
+    {
+      "expected": "invalid_scorecard",
+      "id": "scorecard-long-assertion-id",
+      "observed": "invalid_scorecard",
+      "passed": true
+    },
+    {
+      "expected": "invalid_scorecard",
+      "id": "scorecard-empty-title",
+      "observed": "invalid_scorecard",
+      "passed": true
+    },
+    {
+      "expected": "invalid_scorecard",
+      "id": "scorecard-long-title",
+      "observed": "invalid_scorecard",
+      "passed": true
+    },
+    {
+      "expected": "invalid_scorecard",
+      "id": "scorecard-invalid-severity",
+      "observed": "invalid_scorecard",
+      "passed": true
+    },
+    {
+      "expected": "invalid_scorecard",
+      "id": "scorecard-invalid-failure-cap",
+      "observed": "invalid_scorecard",
+      "passed": true
+    },
+    {
+      "expected": "invalid_scorecard",
+      "id": "scorecard-self-dependency",
+      "observed": "invalid_scorecard",
+      "passed": true
+    },
+    {
+      "expected": "invalid_scorecard",
+      "id": "scorecard-duplicate-dependency",
+      "observed": "invalid_scorecard",
+      "passed": true
+    },
+    {
+      "expected": "invalid_scorecard",
+      "id": "scorecard-unknown-dependency",
+      "observed": "invalid_scorecard",
+      "passed": true
+    },
+    {
+      "expected": "invalid_scorecard",
+      "id": "scorecard-duplicate-id",
+      "observed": "invalid_scorecard",
+      "passed": true
+    },
+    {
+      "expected": "invalid_scorecard",
+      "id": "scorecard-dependency-cycle",
+      "observed": "invalid_scorecard",
+      "passed": true
+    },
+    {
+      "expected": "invalid_scorecard",
+      "id": "scorecard-empty-evidence",
+      "observed": "invalid_scorecard",
+      "passed": true
+    },
+    {
+      "expected": "invalid_scorecard",
+      "id": "scorecard-too-many-machine-evidence",
+      "observed": "invalid_scorecard",
+      "passed": true
+    },
+    {
+      "expected": "invalid_scorecard",
+      "id": "scorecard-too-many-attestation-references",
+      "observed": "invalid_scorecard",
+      "passed": true
+    },
+    {
+      "expected": "invalid_scorecard",
+      "id": "scorecard-invalid-evidence-type",
+      "observed": "invalid_scorecard",
+      "passed": true
+    },
+    {
+      "expected": "invalid_scorecard",
+      "id": "scorecard-invalid-path",
+      "observed": "invalid_scorecard",
+      "passed": true
+    },
+    {
+      "expected": "invalid_scorecard",
+      "id": "scorecard-invalid-sha256",
+      "observed": "invalid_scorecard",
+      "passed": true
+    },
+    {
+      "expected": "invalid_scorecard",
+      "id": "scorecard-invalid-test-path",
+      "observed": "invalid_scorecard",
+      "passed": true
+    },
+    {
+      "expected": "invalid_scorecard",
+      "id": "scorecard-invalid-test-symbol",
+      "observed": "invalid_scorecard",
+      "passed": true
+    },
+    {
+      "expected": "invalid_scorecard",
+      "id": "scorecard-invalid-test-framework",
+      "observed": "invalid_scorecard",
+      "passed": true
+    },
+    {
+      "expected": "invalid_scorecard",
+      "id": "scorecard-invalid-artifact-format",
+      "observed": "invalid_scorecard",
+      "passed": true
+    },
+    {
+      "expected": "invalid_scorecard",
+      "id": "scorecard-empty-artifact-checks",
+      "observed": "invalid_scorecard",
+      "passed": true
+    },
+    {
+      "expected": "invalid_scorecard",
+      "id": "scorecard-too-many-artifact-checks",
+      "observed": "invalid_scorecard",
+      "passed": true
+    },
+    {
+      "expected": "invalid_scorecard",
+      "id": "scorecard-invalid-pointer",
+      "observed": "invalid_scorecard",
+      "passed": true
+    },
+    {
+      "expected": "invalid_scorecard",
+      "id": "scorecard-exists-with-expected",
+      "observed": "invalid_scorecard",
+      "passed": true
+    },
+    {
+      "expected": "invalid_scorecard",
+      "id": "scorecard-missing-expected",
+      "observed": "invalid_scorecard",
+      "passed": true
+    },
+    {
+      "expected": "invalid_scorecard",
+      "id": "scorecard-invalid-numeric-expected",
+      "observed": "invalid_scorecard",
+      "passed": true
+    },
+    {
+      "expected": "invalid_scorecard",
+      "id": "scorecard-invalid-type-expected",
+      "observed": "invalid_scorecard",
+      "passed": true
+    },
+    {
+      "expected": "valid",
+      "id": "attestation-valid",
+      "observed": "valid",
+      "passed": true
+    },
+    {
+      "expected": "invalid_attestation",
+      "id": "attestation-unknown-field",
+      "observed": "invalid_attestation",
+      "passed": true
+    },
+    {
+      "expected": "invalid_attestation",
+      "id": "attestation-invalid-schema-version",
+      "observed": "invalid_attestation",
+      "passed": true
+    },
+    {
+      "expected": "invalid_attestation",
+      "id": "attestation-empty-identity",
+      "observed": "invalid_attestation",
+      "passed": true
+    },
+    {
+      "expected": "invalid_attestation",
+      "id": "attestation-long-identity",
+      "observed": "invalid_attestation",
+      "passed": true
+    },
+    {
+      "expected": "invalid_attestation",
+      "id": "attestation-invalid-timestamp",
+      "observed": "invalid_attestation",
+      "passed": true
+    },
+    {
+      "expected": "invalid_attestation",
+      "id": "attestation-offsetless-timestamp",
+      "observed": "invalid_attestation",
+      "passed": true
+    },
+    {
+      "expected": "invalid_attestation",
+      "id": "attestation-invalid-window",
+      "observed": "invalid_attestation",
+      "passed": true
+    },
+    {
+      "expected": "invalid_attestation",
+      "id": "attestation-empty-repository",
+      "observed": "invalid_attestation",
+      "passed": true
+    },
+    {
+      "expected": "invalid_attestation",
+      "id": "attestation-long-repository",
+      "observed": "invalid_attestation",
+      "passed": true
+    },
+    {
+      "expected": "invalid_attestation",
+      "id": "attestation-invalid-commit",
+      "observed": "invalid_attestation",
+      "passed": true
+    },
+    {
+      "expected": "invalid_attestation",
+      "id": "attestation-empty-scope",
+      "observed": "invalid_attestation",
+      "passed": true
+    },
+    {
+      "expected": "invalid_attestation",
+      "id": "attestation-too-many-scope-assertions",
+      "observed": "invalid_attestation",
+      "passed": true
+    },
+    {
+      "expected": "invalid_attestation",
+      "id": "attestation-invalid-scope-id",
+      "observed": "invalid_attestation",
+      "passed": true
+    },
+    {
+      "expected": "invalid_attestation",
+      "id": "attestation-duplicate-scope",
+      "observed": "invalid_attestation",
+      "passed": true
+    },
+    {
+      "expected": "invalid_attestation",
+      "id": "attestation-empty-statement",
+      "observed": "invalid_attestation",
+      "passed": true
+    },
+    {
+      "expected": "invalid_attestation",
+      "id": "attestation-long-statement",
+      "observed": "invalid_attestation",
+      "passed": true
+    },
+    {
+      "expected": "invalid_document",
+      "id": "scorecard-duplicate-key",
+      "observed": "invalid_document",
+      "passed": true
+    },
+    {
+      "expected": "valid",
+      "id": "scorecard-yaml-core-scalars",
+      "observed": "valid",
+      "passed": true
+    },
+    {
+      "expected": "invalid_scorecard",
+      "id": "scorecard-yaml-legacy-binary",
+      "observed": "invalid_scorecard",
+      "passed": true
+    },
+    {
+      "expected": "invalid_scorecard",
+      "id": "scorecard-yaml-legacy-separator",
+      "observed": "invalid_scorecard",
+      "passed": true
+    },
+    {
+      "expected": "invalid_scorecard",
+      "id": "scorecard-yaml-legacy-sexagesimal",
+      "observed": "invalid_scorecard",
+      "passed": true
+    },
+    {
+      "expected": "invalid_document",
+      "id": "scorecard-yaml-merge-key",
+      "observed": "invalid_document",
+      "passed": true
+    },
+    {
+      "expected": "invalid_document",
+      "id": "scorecard-yaml-nonfinite",
+      "observed": "invalid_document",
+      "passed": true
+    },
+    {
+      "expected": "invalid_document",
+      "id": "scorecard-yaml-nonstring-key",
+      "observed": "invalid_document",
+      "passed": true
+    }
+  ],
+  "fixture_schema_version": "proofstate.dev/conformance-manifest/v1alpha2",
+  "passed": true,
+  "schema_version": "proofstate.dev/conformance-result/v1alpha1"
+}

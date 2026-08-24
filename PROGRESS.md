@@ -9,3 +9,9 @@
 - 2026-08-24: Added public documentation, project policy, and repository automation.
 - 2026-08-24: Published the public repository and 0.1.0 release after local and
   hosted validation.
+- 2026-08-24: Expanded portable schema conformance to 64 generated cases with
+  exact expected-result JSON.
+- 2026-08-24: Published reproducible assertion-graph, Git-history, shallow-clone,
+  and partial-clone measurements.
+- 2026-08-24: Completed the authenticated-attestation design evaluation without
+  weakening the existing unsigned schema contract.

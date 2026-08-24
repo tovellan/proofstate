@@ -100,11 +100,11 @@ proofstate conformance --export ./proofstate-conformance-v1alpha1
 Export refuses an existing destination, never overwrites files, and fails before
 creating output if the installed manifest or any fixture does not verify.
 
-The 17-case corpus covers valid scorecards and attestations plus strict
+The 64-case corpus covers valid scorecards and attestations plus strict
 unknown-field, duplicate-key, dependency-cycle, path, scope, validity-window,
-YAML scalar, merge-key, non-finite, and mapping-key failures. Each case declares
-its expected classification in the installed manifest. The command returns
-status `1` if a fixture digest or outcome differs.
+field-boundary, operator, YAML scalar, merge-key, non-finite, and mapping-key
+failures. The digest-pinned `expected-results.json` records the exact portable
+output. The command returns status `1` if a fixture digest or outcome differs.
 
 Export either versioned document schema:
 
@@ -183,6 +183,13 @@ to a real person.
 See the [threat model](docs/security/THREAT_MODEL.md),
 [scorecard reference](docs/reference/SCORECARD.md), and
 [architecture](docs/architecture/OVERVIEW.md) before adopting a release gate.
+The [authenticated-attestation design evaluation](docs/security/AUTHENTICATED_ATTESTATIONS.md)
+defines the trust, revocation, offline, and schema gates that must precede any
+optional signature implementation.
+
+Measured scale inputs and clone behavior are documented in
+[performance and clone constraints](docs/PERFORMANCE.md). The checked-in result
+is a machine-specific observation, not a general latency promise.
 
 ## Development
 

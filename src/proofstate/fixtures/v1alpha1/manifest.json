@@ -1,22 +1,457 @@
 {
-  "schema_version": "proofstate.dev/conformance-manifest/v1alpha1",
   "cases": [
-    {"id":"scorecard-valid-minimal","document_kind":"scorecard","path":"scorecard-valid-minimal.json","sha256":"57a8893108493522ca1c87ced5952f1c3209e0d0f6b6c9c56b258bbb063e8998","expected":"valid"},
-    {"id":"scorecard-unknown-field","document_kind":"scorecard","path":"scorecard-unknown-field.json","sha256":"b23ea78beb3a37c3a159f1bcbd38a7aec78668358890ec9504c82cbeb034ee74","expected":"invalid_scorecard"},
-    {"id":"scorecard-duplicate-id","document_kind":"scorecard","path":"scorecard-duplicate-id.json","sha256":"dd9a676d8a6a15f21b7397efb85da6746600c99d0b30dd3e799230b61c905355","expected":"invalid_scorecard"},
-    {"id":"scorecard-dependency-cycle","document_kind":"scorecard","path":"scorecard-dependency-cycle.json","sha256":"dae96093c6a44645b0e142ce478feacd8e06269acdf82371621eb4c86a7cde27","expected":"invalid_scorecard"},
-    {"id":"scorecard-invalid-path","document_kind":"scorecard","path":"scorecard-invalid-path.json","sha256":"7f5f1925473b349737290dfe4a687d44a331bcb7f0ef9f54c12d6bf7840bcb74","expected":"invalid_scorecard"},
-    {"id":"scorecard-duplicate-key","document_kind":"scorecard","path":"scorecard-duplicate-key.json","sha256":"d15ab4725af5b3b1df08e51e1aeb0e43abf8a3e27419492926d75acc3f45c65d","expected":"invalid_document"},
-    {"id":"scorecard-yaml-core-scalars","document_kind":"scorecard","path":"scorecard-yaml-core-scalars.yaml","sha256":"9a29b9720efabe1ac7bf5c489b0ded222ed5d4a8965250c4ad7083a937040d1c","expected":"valid"},
-    {"id":"scorecard-yaml-legacy-binary","document_kind":"scorecard","path":"scorecard-yaml-legacy-binary.yaml","sha256":"483f46a9189220e01c55dc227bde918d2e54ef691aa3a992ec44f551cd462387","expected":"invalid_scorecard"},
-    {"id":"scorecard-yaml-legacy-separator","document_kind":"scorecard","path":"scorecard-yaml-legacy-separator.yaml","sha256":"80f6c3d161151230724e92396d411e454bc0808fd58266878e8413b1f3da591d","expected":"invalid_scorecard"},
-    {"id":"scorecard-yaml-legacy-sexagesimal","document_kind":"scorecard","path":"scorecard-yaml-legacy-sexagesimal.yaml","sha256":"cb5546eba1bbd029e8892e1f46856bffa095d4640e0ecbb3f5f3588ba9f284e1","expected":"invalid_scorecard"},
-    {"id":"scorecard-yaml-merge-key","document_kind":"scorecard","path":"scorecard-yaml-merge-key.yaml","sha256":"f8e3576d4086adf8e7a956f2e8f75c802f63c0a95e776cf05fab309197f27e3e","expected":"invalid_document"},
-    {"id":"scorecard-yaml-nonfinite","document_kind":"scorecard","path":"scorecard-yaml-nonfinite.yaml","sha256":"85dd0c7ab1b0ccad317362b99cfd5e5c9fdec79918e5c74c73bdb702cbf29dd0","expected":"invalid_document"},
-    {"id":"scorecard-yaml-nonstring-key","document_kind":"scorecard","path":"scorecard-yaml-nonstring-key.yaml","sha256":"04fe2468f16b17b60680878a523fc566e344a7f4d91f8dcc3b2f547fb2ffc662","expected":"invalid_document"},
-    {"id":"attestation-valid","document_kind":"attestation","path":"attestation-valid.json","sha256":"4fc0efd7179b8da476af04c373383168220e56f7dc099a84e195b3617ce83f41","expected":"valid"},
-    {"id":"attestation-invalid-window","document_kind":"attestation","path":"attestation-invalid-window.json","sha256":"2eb31bbc7350da06a9d7e38f072b1676815dbe657ff6b7dbfec914f77462d4ad","expected":"invalid_attestation"},
-    {"id":"attestation-duplicate-scope","document_kind":"attestation","path":"attestation-duplicate-scope.json","sha256":"6e6bd803bba2e0578a6bfe08c527d0c6a4167c7022e66ee707deab9db442eb88","expected":"invalid_attestation"},
-    {"id":"attestation-unknown-field","document_kind":"attestation","path":"attestation-unknown-field.json","sha256":"4344e6e593a5248121c6da74f981609f3880cb4031c64e3e0bfb732767b6c0dc","expected":"invalid_attestation"}
-  ]
+    {
+      "document_kind": "scorecard",
+      "expected": "valid",
+      "id": "scorecard-valid-minimal",
+      "path": "scorecard-valid-minimal.json",
+      "sha256": "a293390456434dc60654a25649ddea2a845f2b62d31c62f32e07dfd7769d3e90"
+    },
+    {
+      "document_kind": "scorecard",
+      "expected": "valid",
+      "id": "scorecard-valid-complete",
+      "path": "scorecard-valid-complete.json",
+      "sha256": "e8a19c5c4595400a46db1159f29bea82c12ac152a42f58812270519a75a0d110"
+    },
+    {
+      "document_kind": "scorecard",
+      "expected": "invalid_scorecard",
+      "id": "scorecard-unknown-field",
+      "path": "scorecard-unknown-field.json",
+      "sha256": "a80959d00875eb8329e37d4e5c3496ee845e8814725c13701559105767111aa8"
+    },
+    {
+      "document_kind": "scorecard",
+      "expected": "invalid_scorecard",
+      "id": "scorecard-invalid-schema-version",
+      "path": "scorecard-invalid-schema-version.json",
+      "sha256": "68160ee3a0028fb804cab9998002a3219a48019eae07b5fcb4c9a3b8d08ba274"
+    },
+    {
+      "document_kind": "scorecard",
+      "expected": "invalid_scorecard",
+      "id": "scorecard-empty-repository-identity",
+      "path": "scorecard-empty-repository-identity.json",
+      "sha256": "21a207ead559974fbcc4b2d107608176e95e9321c86aad3854a21810d8e5dec6"
+    },
+    {
+      "document_kind": "scorecard",
+      "expected": "invalid_scorecard",
+      "id": "scorecard-long-repository-identity",
+      "path": "scorecard-long-repository-identity.json",
+      "sha256": "e90ddf15defdc9e735c4edfd17488d1fef52f14ae184949a56880893ffa4a2bd"
+    },
+    {
+      "document_kind": "scorecard",
+      "expected": "invalid_scorecard",
+      "id": "scorecard-invalid-commit",
+      "path": "scorecard-invalid-commit.json",
+      "sha256": "085a17163eb5df048033da9324ace9109c9de4b66160030eced89d4656202b23"
+    },
+    {
+      "document_kind": "scorecard",
+      "expected": "invalid_scorecard",
+      "id": "scorecard-settings-below-minimum",
+      "path": "scorecard-settings-below-minimum.json",
+      "sha256": "75497d95342b83b3753c79329222392d9da2eb5cffb26b6561111b009de3cf49"
+    },
+    {
+      "document_kind": "scorecard",
+      "expected": "invalid_scorecard",
+      "id": "scorecard-settings-above-maximum",
+      "path": "scorecard-settings-above-maximum.json",
+      "sha256": "33d62be4c1bb710bf5008efb12e3abeeaa1db9765cda67399a240d8945405a1c"
+    },
+    {
+      "document_kind": "scorecard",
+      "expected": "invalid_scorecard",
+      "id": "scorecard-empty-assertions",
+      "path": "scorecard-empty-assertions.json",
+      "sha256": "3bf4a56c51eb482cb6c5b580ce948e8c6435bc25ce875602a4fd9a14bc53ed7d"
+    },
+    {
+      "document_kind": "scorecard",
+      "expected": "invalid_scorecard",
+      "id": "scorecard-too-many-assertions",
+      "path": "scorecard-too-many-assertions.json",
+      "sha256": "35b0c229420bc39ac4d113d448e8a8e1c5a39c28dbfccf1096f4959d8991cdf9"
+    },
+    {
+      "document_kind": "scorecard",
+      "expected": "invalid_scorecard",
+      "id": "scorecard-invalid-assertion-id",
+      "path": "scorecard-invalid-assertion-id.json",
+      "sha256": "e577205ccd836eab8b796451c72b0e98339fa0cb9ab9d395fec9c4bdbe6a0f9a"
+    },
+    {
+      "document_kind": "scorecard",
+      "expected": "invalid_scorecard",
+      "id": "scorecard-long-assertion-id",
+      "path": "scorecard-long-assertion-id.json",
+      "sha256": "9a41ab7f3319a6199986412628a2b07b5d2a283c0affcd86c8a74bfe91ad4275"
+    },
+    {
+      "document_kind": "scorecard",
+      "expected": "invalid_scorecard",
+      "id": "scorecard-empty-title",
+      "path": "scorecard-empty-title.json",
+      "sha256": "89e6f1919d87c6986348184e684ca4df9cf955bffcec79e076a6ae479291b757"
+    },
+    {
+      "document_kind": "scorecard",
+      "expected": "invalid_scorecard",
+      "id": "scorecard-long-title",
+      "path": "scorecard-long-title.json",
+      "sha256": "1fe0272ce13fb148961d203c6700a20b195752a432118f91b0036d6061e84f11"
+    },
+    {
+      "document_kind": "scorecard",
+      "expected": "invalid_scorecard",
+      "id": "scorecard-invalid-severity",
+      "path": "scorecard-invalid-severity.json",
+      "sha256": "cdff4765ee98317f1dccd3ebaa4663e860cd161d7fae982dcb898ac1bdfb5b4e"
+    },
+    {
+      "document_kind": "scorecard",
+      "expected": "invalid_scorecard",
+      "id": "scorecard-invalid-failure-cap",
+      "path": "scorecard-invalid-failure-cap.json",
+      "sha256": "902ec82f783baccde0246fcaa1ea5e81fb67c527f491ebc0bef9b360e897c3a4"
+    },
+    {
+      "document_kind": "scorecard",
+      "expected": "invalid_scorecard",
+      "id": "scorecard-self-dependency",
+      "path": "scorecard-self-dependency.json",
+      "sha256": "5b143b6d855acd2e2c18101bcf29904070b17f668fe27d15213c3c9eb4d8c1d1"
+    },
+    {
+      "document_kind": "scorecard",
+      "expected": "invalid_scorecard",
+      "id": "scorecard-duplicate-dependency",
+      "path": "scorecard-duplicate-dependency.json",
+      "sha256": "141a43d7735cd9b71e61c33b0f50383e73c4d156c5ccf6f1a34f6dd544b64cee"
+    },
+    {
+      "document_kind": "scorecard",
+      "expected": "invalid_scorecard",
+      "id": "scorecard-unknown-dependency",
+      "path": "scorecard-unknown-dependency.json",
+      "sha256": "e3ded08f9fb1c24f0f9e4c4215c6e142b0e568671c03213c52ae0400f98d25d0"
+    },
+    {
+      "document_kind": "scorecard",
+      "expected": "invalid_scorecard",
+      "id": "scorecard-duplicate-id",
+      "path": "scorecard-duplicate-id.json",
+      "sha256": "92db88bcfe9ab0d6a0337d18f090411b29a48d35d052b37c0f83cfd3b6ca686d"
+    },
+    {
+      "document_kind": "scorecard",
+      "expected": "invalid_scorecard",
+      "id": "scorecard-dependency-cycle",
+      "path": "scorecard-dependency-cycle.json",
+      "sha256": "f5c95bedea382ff509e5a9bb07c8aa5dafdd8caf6e5e21fa38ddb726ac4c9fea"
+    },
+    {
+      "document_kind": "scorecard",
+      "expected": "invalid_scorecard",
+      "id": "scorecard-empty-evidence",
+      "path": "scorecard-empty-evidence.json",
+      "sha256": "af3046a8a542539c0490280046172740bc738e408ea3b594306f7dd77ba993a3"
+    },
+    {
+      "document_kind": "scorecard",
+      "expected": "invalid_scorecard",
+      "id": "scorecard-too-many-machine-evidence",
+      "path": "scorecard-too-many-machine-evidence.json",
+      "sha256": "286e29be61ca0ed267a91cd1ba961f5876a5d98879f2a8f1e36255ccb1449da0"
+    },
+    {
+      "document_kind": "scorecard",
+      "expected": "invalid_scorecard",
+      "id": "scorecard-too-many-attestation-references",
+      "path": "scorecard-too-many-attestation-references.json",
+      "sha256": "342ba395edd944882b29bc71fb11365b9382d230bf89b4c17a5604fc02740bec"
+    },
+    {
+      "document_kind": "scorecard",
+      "expected": "invalid_scorecard",
+      "id": "scorecard-invalid-evidence-type",
+      "path": "scorecard-invalid-evidence-type.json",
+      "sha256": "4eb879ae1e45fd7d84017c81a29723178a8a62aea655a851b86a6599ba830840"
+    },
+    {
+      "document_kind": "scorecard",
+      "expected": "invalid_scorecard",
+      "id": "scorecard-invalid-path",
+      "path": "scorecard-invalid-path.json",
+      "sha256": "03643331a2d622dd1a08671c598ff0764dc3cbd3f96c1b5a6ea48cdb8d87d2a1"
+    },
+    {
+      "document_kind": "scorecard",
+      "expected": "invalid_scorecard",
+      "id": "scorecard-invalid-sha256",
+      "path": "scorecard-invalid-sha256.json",
+      "sha256": "6d2c0709276806af25166f3eca98253d2265773e602233360ae0219f38821d17"
+    },
+    {
+      "document_kind": "scorecard",
+      "expected": "invalid_scorecard",
+      "id": "scorecard-invalid-test-path",
+      "path": "scorecard-invalid-test-path.json",
+      "sha256": "0f3aa454ea28d42a37f82e85d3310fcb0992e0ab49049e7f5b03b97f9814f586"
+    },
+    {
+      "document_kind": "scorecard",
+      "expected": "invalid_scorecard",
+      "id": "scorecard-invalid-test-symbol",
+      "path": "scorecard-invalid-test-symbol.json",
+      "sha256": "2949e1ad7be1b235d481d76376ee0a04a76305e0b6f7c86df75a57738f9d4ef6"
+    },
+    {
+      "document_kind": "scorecard",
+      "expected": "invalid_scorecard",
+      "id": "scorecard-invalid-test-framework",
+      "path": "scorecard-invalid-test-framework.json",
+      "sha256": "0c99046473cab3d617202c50ecb4ba1c69f9466008e26d29bee969810a340a47"
+    },
+    {
+      "document_kind": "scorecard",
+      "expected": "invalid_scorecard",
+      "id": "scorecard-invalid-artifact-format",
+      "path": "scorecard-invalid-artifact-format.json",
+      "sha256": "8f9f3e59fb426a6858d971ffb294cff37a0c57d142eb6f17e5d0bf5ac5438d74"
+    },
+    {
+      "document_kind": "scorecard",
+      "expected": "invalid_scorecard",
+      "id": "scorecard-empty-artifact-checks",
+      "path": "scorecard-empty-artifact-checks.json",
+      "sha256": "baa1726f93ab46bbf2fbf0e13b733d826930be4f0a3b3126e05b1929494566a9"
+    },
+    {
+      "document_kind": "scorecard",
+      "expected": "invalid_scorecard",
+      "id": "scorecard-too-many-artifact-checks",
+      "path": "scorecard-too-many-artifact-checks.json",
+      "sha256": "c254244e34ebbd4ffe58e13a1344b42e38d8ee06692aad4aa1838c6970c54506"
+    },
+    {
+      "document_kind": "scorecard",
+      "expected": "invalid_scorecard",
+      "id": "scorecard-invalid-pointer",
+      "path": "scorecard-invalid-pointer.json",
+      "sha256": "c06c581822ab08c4c377433b99e405f12cb3fa81ae88c512e102569c2502a091"
+    },
+    {
+      "document_kind": "scorecard",
+      "expected": "invalid_scorecard",
+      "id": "scorecard-exists-with-expected",
+      "path": "scorecard-exists-with-expected.json",
+      "sha256": "8c2d5544575bb0a9210cba07497b4b09e752d817029f866f63a5c09b80a0e7f4"
+    },
+    {
+      "document_kind": "scorecard",
+      "expected": "invalid_scorecard",
+      "id": "scorecard-missing-expected",
+      "path": "scorecard-missing-expected.json",
+      "sha256": "4ace6056d8555a49762d9423346820be1b6140ddbb246f28c685c1f7f16030d1"
+    },
+    {
+      "document_kind": "scorecard",
+      "expected": "invalid_scorecard",
+      "id": "scorecard-invalid-numeric-expected",
+      "path": "scorecard-invalid-numeric-expected.json",
+      "sha256": "b4489551c816f584d72ad6ce7179d228fa2804073fa0d4863161172915cdd6cd"
+    },
+    {
+      "document_kind": "scorecard",
+      "expected": "invalid_scorecard",
+      "id": "scorecard-invalid-type-expected",
+      "path": "scorecard-invalid-type-expected.json",
+      "sha256": "d0efd0c0b17fab7ff1d2a032921b229815f3d1a3f54855b096549e84de644957"
+    },
+    {
+      "document_kind": "attestation",
+      "expected": "valid",
+      "id": "attestation-valid",
+      "path": "attestation-valid.json",
+      "sha256": "5ade52ccdbb9f8479af9babd3c13c268e81da0699be6b86bc62c2d9a8f31b21f"
+    },
+    {
+      "document_kind": "attestation",
+      "expected": "invalid_attestation",
+      "id": "attestation-unknown-field",
+      "path": "attestation-unknown-field.json",
+      "sha256": "fd9b03fe560fdbc8578b59dd12e86a6bd15ecf9179d898991834e0362bf6ca5b"
+    },
+    {
+      "document_kind": "attestation",
+      "expected": "invalid_attestation",
+      "id": "attestation-invalid-schema-version",
+      "path": "attestation-invalid-schema-version.json",
+      "sha256": "917820474107180e635b6a1feeeabca52aad1876c562d16550ed6fb9ef14a7dc"
+    },
+    {
+      "document_kind": "attestation",
+      "expected": "invalid_attestation",
+      "id": "attestation-empty-identity",
+      "path": "attestation-empty-identity.json",
+      "sha256": "76747782f4a2523c7d7d5ae95467d340f96a97393d42582562732d02a9d050b2"
+    },
+    {
+      "document_kind": "attestation",
+      "expected": "invalid_attestation",
+      "id": "attestation-long-identity",
+      "path": "attestation-long-identity.json",
+      "sha256": "86e3299bdbdcff1db422df35e0dc7079e1542b19eeab924079c1ec0fd8108147"
+    },
+    {
+      "document_kind": "attestation",
+      "expected": "invalid_attestation",
+      "id": "attestation-invalid-timestamp",
+      "path": "attestation-invalid-timestamp.json",
+      "sha256": "8c00b2963876e51d34167bf3a0dc72dcf2658c68d6a0046fb788e647a243b71f"
+    },
+    {
+      "document_kind": "attestation",
+      "expected": "invalid_attestation",
+      "id": "attestation-offsetless-timestamp",
+      "path": "attestation-offsetless-timestamp.json",
+      "sha256": "6e60ce180efc2355eaf4ebd416b9a1613e455d1b542fa8e3191676b9d88ef018"
+    },
+    {
+      "document_kind": "attestation",
+      "expected": "invalid_attestation",
+      "id": "attestation-invalid-window",
+      "path": "attestation-invalid-window.json",
+      "sha256": "ecc95e57603f57168c9a4f9574069c5bcf0fcd8fd42ce8d42f340656d558a2a7"
+    },
+    {
+      "document_kind": "attestation",
+      "expected": "invalid_attestation",
+      "id": "attestation-empty-repository",
+      "path": "attestation-empty-repository.json",
+      "sha256": "c4408326560667f3dceba4829c614b2c4eca8b8d118badf26e1a60557132b3d1"
+    },
+    {
+      "document_kind": "attestation",
+      "expected": "invalid_attestation",
+      "id": "attestation-long-repository",
+      "path": "attestation-long-repository.json",
+      "sha256": "74e9155e083d48b9fe3c98922670d6153f143770409ecd36445ef055919ff17b"
+    },
+    {
+      "document_kind": "attestation",
+      "expected": "invalid_attestation",
+      "id": "attestation-invalid-commit",
+      "path": "attestation-invalid-commit.json",
+      "sha256": "40d2a75c61c23eefc51b07ca8b557e23392dd61d33ad78a892a7031f9cfe80a3"
+    },
+    {
+      "document_kind": "attestation",
+      "expected": "invalid_attestation",
+      "id": "attestation-empty-scope",
+      "path": "attestation-empty-scope.json",
+      "sha256": "d725d1d7042fdf066696fd5ba5ef6587d401701d2e2cd6747d95fe2cd70e88d9"
+    },
+    {
+      "document_kind": "attestation",
+      "expected": "invalid_attestation",
+      "id": "attestation-too-many-scope-assertions",
+      "path": "attestation-too-many-scope-assertions.json",
+      "sha256": "0e99268233037e4b7df142a31303765e28830180e4e7dc7319eda28f9490711a"
+    },
+    {
+      "document_kind": "attestation",
+      "expected": "invalid_attestation",
+      "id": "attestation-invalid-scope-id",
+      "path": "attestation-invalid-scope-id.json",
+      "sha256": "f8e65ff4de65492991ff76abc9171d3a01e806672040a0a4e6bde42f8019afc1"
+    },
+    {
+      "document_kind": "attestation",
+      "expected": "invalid_attestation",
+      "id": "attestation-duplicate-scope",
+      "path": "attestation-duplicate-scope.json",
+      "sha256": "8b4438209cf14ecd85ad5a74080c4ac7e80281a43df2a162960e105cbc97ad49"
+    },
+    {
+      "document_kind": "attestation",
+      "expected": "invalid_attestation",
+      "id": "attestation-empty-statement",
+      "path": "attestation-empty-statement.json",
+      "sha256": "c846df0c5a843ac77a45a81867e5248565dd4f3a9ac1db17546118a85d115dcd"
+    },
+    {
+      "document_kind": "attestation",
+      "expected": "invalid_attestation",
+      "id": "attestation-long-statement",
+      "path": "attestation-long-statement.json",
+      "sha256": "a40f1d96371aa7d6474e4688a68e7136e74b076bfa62eebc4c5656344a366a87"
+    },
+    {
+      "document_kind": "scorecard",
+      "expected": "invalid_document",
+      "id": "scorecard-duplicate-key",
+      "path": "scorecard-duplicate-key.json",
+      "sha256": "0430c6a8384c672532b3a37f37e2642330baf87bebac80cdea71beac0c982328"
+    },
+    {
+      "document_kind": "scorecard",
+      "expected": "valid",
+      "id": "scorecard-yaml-core-scalars",
+      "path": "scorecard-yaml-core-scalars.yaml",
+      "sha256": "9a29b9720efabe1ac7bf5c489b0ded222ed5d4a8965250c4ad7083a937040d1c"
+    },
+    {
+      "document_kind": "scorecard",
+      "expected": "invalid_scorecard",
+      "id": "scorecard-yaml-legacy-binary",
+      "path": "scorecard-yaml-legacy-binary.yaml",
+      "sha256": "483f46a9189220e01c55dc227bde918d2e54ef691aa3a992ec44f551cd462387"
+    },
+    {
+      "document_kind": "scorecard",
+      "expected": "invalid_scorecard",
+      "id": "scorecard-yaml-legacy-separator",
+      "path": "scorecard-yaml-legacy-separator.yaml",
+      "sha256": "80f6c3d161151230724e92396d411e454bc0808fd58266878e8413b1f3da591d"
+    },
+    {
+      "document_kind": "scorecard",
+      "expected": "invalid_scorecard",
+      "id": "scorecard-yaml-legacy-sexagesimal",
+      "path": "scorecard-yaml-legacy-sexagesimal.yaml",
+      "sha256": "cb5546eba1bbd029e8892e1f46856bffa095d4640e0ecbb3f5f3588ba9f284e1"
+    },
+    {
+      "document_kind": "scorecard",
+      "expected": "invalid_document",
+      "id": "scorecard-yaml-merge-key",
+      "path": "scorecard-yaml-merge-key.yaml",
+      "sha256": "f8e3576d4086adf8e7a956f2e8f75c802f63c0a95e776cf05fab309197f27e3e"
+    },
+    {
+      "document_kind": "scorecard",
+      "expected": "invalid_document",
+      "id": "scorecard-yaml-nonfinite",
+      "path": "scorecard-yaml-nonfinite.yaml",
+      "sha256": "85dd0c7ab1b0ccad317362b99cfd5e5c9fdec79918e5c74c73bdb702cbf29dd0"
+    },
+    {
+      "document_kind": "scorecard",
+      "expected": "invalid_document",
+      "id": "scorecard-yaml-nonstring-key",
+      "path": "scorecard-yaml-nonstring-key.yaml",
+      "sha256": "04fe2468f16b17b60680878a523fc566e344a7f4d91f8dcc3b2f547fb2ffc662"
+    }
+  ],
+  "expected_results": {
+    "path": "expected-results.json",
+    "sha256": "fdc87b8fa6629f73022f035d11f5fc968be8f9f23a93d0826e6f53d7c833bc50"
+  },
+  "schema_version": "proofstate.dev/conformance-manifest/v1alpha2"
 }

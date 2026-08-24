@@ -1,11 +1,24 @@
 {
+  "assertions": [
+    {
+      "evidence": {
+        "attestations": [],
+        "machine": [
+          {
+            "path": "README.md",
+            "type": "file"
+          }
+        ]
+      },
+      "id": "source-present",
+      "severity": "high",
+      "title": "Source is present"
+    }
+  ],
+  "repository": {
+    "commit": "0000000000000000000000000000000000000000",
+    "identity": "example.invalid/widget"
+  },
   "schema_version": "proofstate.dev/scorecard/v1alpha1",
-  "repository": {"identity": "example.invalid/widget", "commit": "0000000000000000000000000000000000000000"},
-  "unexpected": true,
-  "assertions": [{
-    "id": "source-present",
-    "title": "Source is present",
-    "severity": "high",
-    "evidence": {"machine": [{"type": "file", "path": "README.md"}], "attestations": []}
-  }]
+  "unexpected": true
 }

@@ -1,0 +1,96 @@
+{
+  "assertions": [
+    {
+      "depends_on": [],
+      "evidence": {
+        "attestations": [],
+        "machine": [
+          {
+            "path": "README.md",
+            "sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+            "type": "file"
+          },
+          {
+            "framework": "pytest",
+            "path": "tests/test_release.py",
+            "symbol": "TestRelease.test_candidate",
+            "type": "test_symbol"
+          },
+          {
+            "checks": [
+              {
+                "operator": "exists",
+                "pointer": "/ready"
+              },
+              {
+                "expected": true,
+                "operator": "equals",
+                "pointer": "/ready"
+              },
+              {
+                "expected": "failed",
+                "operator": "not_equals",
+                "pointer": "/status"
+              },
+              {
+                "expected": "release",
+                "operator": "contains",
+                "pointer": "/labels"
+              },
+              {
+                "expected": 1,
+                "operator": "gte",
+                "pointer": "/passed"
+              },
+              {
+                "expected": 0.0,
+                "operator": "lte",
+                "pointer": "/failed"
+              },
+              {
+                "expected": "object",
+                "operator": "type",
+                "pointer": "/summary"
+              }
+            ],
+            "format": "json",
+            "path": "evidence/result.json",
+            "sha256": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+            "type": "artifact"
+          }
+        ]
+      },
+      "failure_cap": "merge",
+      "id": "all-machine-evidence",
+      "severity": "critical",
+      "title": "Every machine evidence shape is represented"
+    },
+    {
+      "depends_on": [
+        "all-machine-evidence"
+      ],
+      "evidence": {
+        "attestations": [
+          {
+            "path": ".proofstate/attestations/review.json",
+            "sha256": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+            "type": "human_attestation"
+          }
+        ],
+        "machine": []
+      },
+      "failure_cap": "advisory",
+      "id": "human-review",
+      "severity": "medium",
+      "title": "Human review is represented"
+    }
+  ],
+  "repository": {
+    "commit": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "identity": "example.invalid/widget"
+  },
+  "schema_version": "proofstate.dev/scorecard/v1alpha1",
+  "settings": {
+    "max_evidence_bytes": 10485760
+  }
+}
