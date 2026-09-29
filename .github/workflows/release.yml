@@ -19,7 +19,8 @@ permissions:
 jobs:
   release:
     name: Validate and create GitHub release
-    if: ${{ inputs.confirm }}
+    if: ${{ inputs.confirm && github.ref == 'refs/heads/main' && github.workflow_ref == 'tovellan/proofstate/.github/workflows/release.yml@refs/heads/main' }}
+    environment: release
     runs-on: ubuntu-latest
     env:
       RELEASE_TAG: ${{ inputs.tag }}

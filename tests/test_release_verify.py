@@ -97,7 +97,11 @@ def test_release_workflow_binds_and_attests_exact_artifacts() -> None:
     )
     job = workflow["jobs"]["release"]
 
-    assert job["if"] == "${{ inputs.confirm }}"
+    assert job["if"] == (
+        "${{ inputs.confirm && github.ref == 'refs/heads/main' && "
+        "github.workflow_ref == "
+        "'tovellan/proofstate/.github/workflows/release.yml@refs/heads/main' }}"
+    )
     assert job["runs-on"] == "ubuntu-latest"
     assert job["env"] == {"RELEASE_TAG": "${{ inputs.tag }}"}
     assert job["permissions"] == {
