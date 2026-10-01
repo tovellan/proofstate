@@ -38,7 +38,7 @@ proofstate = "proofstate.cli:main"
 
 [dependency-groups]
 dev = [
-  "build>=1.2.2,<2",
+  "build>=1.6.1,<2",
   "hypothesis>=6.124,<7",
   "mypy>=1.14,<3",
   "pip-audit>=2.8,<3",
