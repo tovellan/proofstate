@@ -24,7 +24,7 @@ classifiers = [
   "Typing :: Typed",
 ]
 dependencies = [
-  "pydantic>=2.10,<3",
+  "pydantic>=2.13.5,<3",
   "pyyaml>=6.0.2,<7",
 ]
 
@@ -38,14 +38,14 @@ proofstate = "proofstate.cli:main"
 
 [dependency-groups]
 dev = [
-  "build>=1.2.2,<2",
-  "hypothesis>=6.124,<7",
+  "build>=1.6.1,<2",
+  "hypothesis>=6.168.3,<7",
   "mypy>=1.14,<3",
   "pip-audit>=2.8,<3",
   "pytest>=9.0.3,<10",
-  "pytest-cov>=6,<8",
+  "pytest-cov>=7.1.0,<8",
   "ruff>=0.9,<1",
-  "types-pyyaml>=6.0.12,<7",
+  "types-pyyaml>=6.0.12.20260906,<7",
 ]
 
 [tool.hatch.build.targets.wheel]
